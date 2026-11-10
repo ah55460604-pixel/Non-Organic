@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOCh-201 Exam Lab</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&family=Cairo:wght@500;700&family=Quicksand:wght@500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<script>
+  if (window.tailwind) tailwind.config = { theme: { extend: { fontFamily: {
+    display: ['"Space Grotesk"', 'sans-serif'], mono: ['"JetBrains Mono"', 'monospace'],
+    sans: ['Inter', 'system-ui', 'sans-serif'], ar: ['Cairo', 'sans-serif'] } } } };
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  /* ===== THEMES: default (lab) · boy · girl — switched live via <body data-theme> ===== */
+  body {
+    --bg:#0b0f1a; --panel:#121829; --panel2:#182036; --line:#263049; --text:#e8ecf5; --muted:#8b95b0;
+    --acc:#4de1c1; --accInk:#062a22; --amber:#ffb547; --amberInk:#2b1a00; --rose:#ff6b81; --violet:#a78bfa;
+    --accSoft:rgba(77,225,193,.08); --accLine:rgba(77,225,193,.35); --ring:rgba(77,225,193,.18);
+    --okBg:rgba(52,211,153,.12); --okLine:#34d399; --okText:#6ee7b7; --badBg:rgba(255,107,129,.09); --badLine:rgba(255,107,129,.6); --badText:#fda4af;
+    --soft:#cfd6e6; --inputBg:#0e1424; --ph:#5d6784; --header:rgba(11,15,26,.82); --overlay:rgba(5,8,15,.7);
+    --dis:#2a344e; --disInk:#66708b; --grid:rgba(255,255,255,.025); --glow1:rgba(77,225,193,.10); --glow2:rgba(167,139,250,.10);
+    --remBg:linear-gradient(90deg,rgba(77,225,193,.12),rgba(167,139,250,.12)); --bankTag:#93c5fd; --lecTag:#c4b5fd; --r:18px;
+    --cA:#e8ecf5; --c1:#ff6b81; --c2:#ffb547; --c4:#4de1c1; --c5:#a3e635; --c6:#60a5fa; --c7:#a78bfa;
+  }
+  body[data-theme="boy"] {
+    --bg:#060a13; --panel:#0c1322; --panel2:#101a2e; --line:#1d2a45; --text:#e6edf7; --muted:#7f8daa;
+    --acc:#3b82f6; --accInk:#ffffff; --amber:#f59e0b; --amberInk:#1f1300; --rose:#ef4444; --violet:#22d3ee;
+    --accSoft:rgba(59,130,246,.10); --accLine:rgba(59,130,246,.45); --ring:rgba(59,130,246,.25);
+    --inputBg:#0a1120; --ph:#56627e; --header:rgba(6,10,19,.85); --dis:#1d2a45; --disInk:#56627e;
+    --grid:rgba(96,165,250,.05); --glow1:rgba(59,130,246,.16); --glow2:rgba(34,211,238,.10);
+    --remBg:linear-gradient(90deg,rgba(59,130,246,.14),rgba(34,211,238,.10)); --bankTag:#93c5fd; --lecTag:#67e8f9; --r:12px;
+    --cA:#e6edf7; --c1:#ef4444; --c2:#f59e0b; --c4:#22d3ee; --c5:#22c55e; --c6:#3b82f6; --c7:#8b5cf6;
+  }
+  body[data-theme="girl"] {
+    --bg:#fbf5f8; --panel:#ffffff; --panel2:#fdf1f6; --line:#efd9e3; --text:#4b2f3e; --muted:#9a7b8b;
+    --acc:#d47fa6; --accInk:#ffffff; --amber:#e3a0b2; --amberInk:#ffffff; --rose:#d16d7e; --violet:#b69ad8;
+    --accSoft:rgba(212,127,166,.10); --accLine:rgba(212,127,166,.45); --ring:rgba(212,127,166,.20);
+    --okBg:rgba(124,184,150,.14); --okLine:#8cc5a4; --okText:#3f8a63; --badBg:rgba(209,109,126,.08); --badLine:#e2a1ad; --badText:#b5546a;
+    --soft:#6b5160; --inputBg:#ffffff; --ph:#c9b0bd; --header:rgba(251,245,248,.86); --overlay:rgba(75,47,62,.35);
+    --dis:#f1e4ea; --disInk:#c0a6b3; --grid:rgba(212,127,166,.07); --glow1:rgba(232,160,191,.30); --glow2:rgba(182,154,216,.28);
+    --remBg:linear-gradient(90deg,rgba(232,160,191,.22),rgba(182,154,216,.22)); --bankTag:#8f80cf; --lecTag:#c4669a; --r:24px;
+    --cA:#8f6f80; --c1:#d16d7e; --c2:#e39bb6; --c4:#b69ad8; --c5:#c98bb9; --c6:#9d8fd6; --c7:#e2a08f;
+  }
+  body[data-theme="girl"] .font-display, body[data-theme="girl"] .tile .sym, body[data-theme="girl"] .btn { font-family: 'Quicksand', sans-serif; }
+  body[data-theme="boy"] .font-display, body[data-theme="boy"] .tile .sym, body[data-theme="boy"] .btn { font-family: 'Rajdhani', sans-serif; letter-spacing: .02em; }
+  body[data-theme="girl"] .panel, body[data-theme="girl"] .panel2 { box-shadow: 0 8px 30px -14px rgba(196,102,154,.25); }
+  body { transition: background-color .5s ease, color .5s ease; }
+  .panel, .panel2, .tile, .chip, .opt, input, textarea, header { transition: background-color .5s ease, border-color .5s ease, color .5s ease; }
+  /* decorations */
+  #decor { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  #decor span { position: absolute; animation: drift linear infinite; user-select: none; }
+  @keyframes drift { 0% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-26px) rotate(12deg); } 100% { transform: translateY(0) rotate(0deg); } }
+  .gchip { border: 1.5px solid var(--line); border-radius: 999px; padding: 9px 18px; background: var(--panel2); font-weight: 600; transition: all .2s; }
+  .gchip:hover { border-color: var(--acc); }
+  .gchip.on { background: var(--acc); color: var(--accInk); border-color: var(--acc); }
+  html, body { background: var(--bg); color: var(--text); }
+  body {
+    background-image:
+      radial-gradient(900px 500px at 85% -10%, var(--glow1), transparent 60%),
+      radial-gradient(700px 400px at -10% 110%, var(--glow2), transparent 60%),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: auto, auto, 32px 32px, 32px 32px;
+    background-attachment: fixed;
+  }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
+  .panel2 { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; }
+  .muted { color: var(--muted); }
+  .ar { font-family: 'Cairo', sans-serif; direction: rtl; unicode-bidi: plaintext; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  input, textarea { background: var(--inputBg); border: 1px solid var(--line); color: var(--text); border-radius: 12px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px var(--ring); }
+  input::placeholder, textarea::placeholder { color: var(--ph); }
+
+  /* element tiles */
+  .tile { position: relative; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 12px 12px; background: var(--panel2);
+          transition: transform .15s, border-color .15s, box-shadow .15s; text-align: left; cursor: pointer; min-height: 112px; }
+  .tile:hover { transform: translateY(-2px); }
+  .tile .num { font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: .8; }
+  .tile .cnt { position: absolute; top: 9px; right: 11px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+  .tile .sym { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; line-height: 1.1; margin-top: 2px; }
+  .tile .nm { font-size: 12px; color: var(--muted); line-height: 1.25; margin-top: 2px; }
+  .tile.on { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent), inset 0 0 40px color-mix(in srgb, var(--c) 10%, transparent); }
+  .tile .sym { color: var(--c); }
+
+  .chip { font-family: 'JetBrains Mono', monospace; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; background: var(--panel2); transition: all .15s; }
+  .chip:hover:not(:disabled) { border-color: var(--acc); }
+  .chip.on { background: var(--acc); color: var(--accInk); border-color: var(--acc); font-weight: 700; }
+  .chip:disabled { opacity: .35; cursor: not-allowed; }
+
+  .btn { font-family: 'Space Grotesk', sans-serif; font-weight: 600; border-radius: 12px; padding: 12px 22px; transition: all .15s; }
+  .btn-acc { background: var(--acc); color: var(--accInk); } .btn-acc:hover { filter: brightness(1.08); }
+  .btn-acc:disabled { background: var(--dis); color: var(--disInk); cursor: not-allowed; }
+  .btn-ghost { border: 1.5px solid var(--line); color: var(--text); } .btn-ghost:hover { border-color: var(--acc); }
+  .btn-amber { background: var(--amber); color: var(--amberInk); }
+
+  .opt { width: 100%; text-align: left; border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; background: var(--panel2); transition: all .15s; }
+  .opt:hover:not(:disabled) { border-color: var(--acc); }
+  .opt .k { font-family: 'JetBrains Mono', monospace; width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; border-radius: 8px; background: var(--inputBg); border: 1px solid var(--line); font-size: 13px; }
+  .opt.sel { border-color: var(--acc); background: var(--accSoft); }
+  .opt.ok  { border-color: var(--okLine); background: var(--okBg); }
+  .opt.bad { border-color: var(--badLine); background: var(--badBg); }
+
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .fade { animation: fade .28s ease; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .hidden-view { display: none !important; }
+  #toast { transition: all .3s ease; }
+  .pop { animation: pop .4s ease; } @keyframes pop { 0% { transform: scale(.85); opacity: 0 } 60% { transform: scale(1.04) } 100% { transform: scale(1); opacity: 1 } }
+  .confetti { position: fixed; top: -40px; font-size: 26px; animation: fall linear forwards; pointer-events: none; z-index: 60; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: .9; } }
+  table td, table th { border-color: var(--line); }
+</style>
+</head>
+<body class="font-sans min-h-screen">
+<div id="decor" aria-hidden="true"></div>
+
+<!-- ================= HEADER ================= -->
+<header class="sticky top-0 z-30 backdrop-blur border-b" style="background:var(--header);border-color:var(--line)">
+  <div class="max-w-5xl mx-auto px-4 h-16 flex items-center gap-3">
+    <div id="logo" class="select-none w-11 h-11 rounded-lg grid place-items-center relative" style="background:var(--panel2);border:1.5px solid var(--acc)">
+      <span class="absolute top-0.5 left-1 font-mono text-[9px]" style="color:var(--acc)">201</span>
+      <span class="font-display font-bold text-lg" style="color:var(--acc)">Nc</span>
+    </div>
+    <div>
+      <div class="font-display font-bold leading-tight">NOCh-201 Exam Lab</div>
+      <div class="text-xs muted leading-tight">Principles of Non-Organic Chemistry</div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 py-8 relative z-10">
+
+<!-- ================= SETUP (one screen) ================= -->
+<section id="view-setup" class="fade">
+  <div class="mb-6">
+    <div class="label mb-2">Formative MCQ &amp; short-answer practice</div>
+    <h1 class="font-display text-3xl sm:text-4xl font-bold" id="hello">Welcome to the lab 👋</h1>
+    <p class="muted mt-2 max-w-2xl">Questions come from the course question bank plus new questions built from lecture details. Instant feedback after every answer.</p>
+  </div>
+
+  <div class="panel p-5 sm:p-7 grid gap-7">
+    <!-- name -->
+    <div>
+      <label for="studentName" class="label block mb-2">01 · Your name <span style="color:var(--acc)">(optional)</span></label>
+      <input id="studentName" type="text" maxlength="30" autocomplete="given-name" placeholder="Name" class="w-full sm:max-w-sm px-4 py-3 text-lg">
+      <p id="nameHint" class="ar text-sm mt-2 muted text-right sm:text-right">✍️ اختياري — لو كتبت اسمك هنناديك بيه في رسايل الترحيب والفيدباك بعد كل سؤال وفي النتيجة النهائية.</p>
+    </div>
+
+    <!-- gender -->
+    <div>
+      <div class="label mb-3">Gender <span style="color:var(--acc)">(optional)</span></div>
+      <div class="flex flex-wrap gap-2" id="genderChips">
+        <button type="button" class="gchip ar" data-gender="boy">👦 ولد</button>
+        <button type="button" class="gchip ar" data-gender="girl">👧 بنت</button>
+        <button type="button" class="gchip ar" data-gender="">⚗️ من غير اختيار</button>
+      </div>
+      <p class="ar text-sm mt-2 muted text-right sm:text-right">🎨 اختياري — لو اخترت، شكل الموقع وألوانه وطريقة الكلام والتحفيز هيتغيّروا ليك في نفس اللحظة. لو مخترتش، هيفضل الشكل الأساسي.</p>
+    </div>
+
+    <!-- scope -->
+    <div>
+      <div class="label mb-3">02 · Choose the lecture</div>
+      <div id="scopeTiles" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+    </div>
+
+    <!-- count -->
+    <div>
+      <div class="label mb-3">03 · Number of questions</div>
+      <div class="flex flex-wrap gap-2 items-center" id="countChips"></div>
+      <div class="flex items-center gap-3 mt-3">
+        <input id="customCount" type="number" inputmode="numeric" min="1" step="1" placeholder="Type a number" class="w-40 px-3 py-2">
+        <span class="text-sm muted" id="customMax"></span>
+      </div>
+      <p id="countErr" class="text-sm mt-2 hidden" style="color:var(--rose)"></p>
+    </div>
+
+    <!-- difficulty -->
+    <div>
+      <div class="label mb-3">04 · Difficulty</div>
+      <div class="flex flex-wrap gap-2" id="diffChips"></div>
+      <p class="text-xs muted mt-2">If a level runs short for the chosen lecture, the exam is topped up from the nearest level.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-4 pt-5 border-t" style="border-color:var(--line)">
+      <div class="text-sm muted" id="summary"></div>
+      <button id="startBtn" class="btn btn-acc text-lg px-8">Start exam →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EXAM ================= -->
+<section id="view-exam" class="hidden-view">
+  <div class="max-w-3xl mx-auto">
+    <div class="grid grid-cols-4 gap-2 sm:gap-3 mb-3">
+      <div class="panel2 px-3 py-2"><div class="label">Question</div><div class="font-mono text-xl sm:text-2xl font-bold"><span id="qNum">1</span><span class="muted text-base">/<span id="qTotal">10</span></span></div></div>
+      <div class="panel2 px-3 py-2"><div class="label">Score</div><div class="font-mono text-xl sm:text-2xl font-bold" style="color:var(--acc)" id="liveScore">0</div></div>
+      <div class="panel2 px-3 py-2"><div class="label">Streak</div><div class="font-mono text-xl sm:text-2xl font-bold" style="color:var(--amber)"><span id="streak">0</span><span class="text-base"> 🔥</span></div></div>
+      <div class="panel2 px-3 py-2"><div class="label">Time</div><div class="font-mono text-xl sm:text-2xl font-bold" id="timer">00:00</div></div>
+    </div>
+    <div class="h-1.5 rounded-full overflow-hidden mb-4" style="background:var(--line)"><div id="progressBar" class="h-full transition-all duration-300" style="width:0%;background:linear-gradient(90deg,var(--acc),var(--violet))"></div></div>
+
+    <div id="reminder" class="hidden mb-4 rounded-2xl px-5 py-4 flex items-center justify-between gap-3 fade" style="background:var(--remBg);border:1px solid var(--accLine)">
+      <div class="ar text-lg font-bold flex-1 text-center" id="reminderText"></div>
+      <button id="reminderX" class="muted text-xl leading-none px-2" aria-label="Dismiss">×</button>
+    </div>
+
+    <div class="panel p-5 sm:p-7 fade" id="qCard">
+      <div class="flex flex-wrap gap-2 mb-4" id="qTags"></div>
+      <h2 id="qText" class="text-lg sm:text-xl font-semibold leading-relaxed mb-5"></h2>
+
+      <div id="qOptions" class="grid gap-3"></div>
+
+      <div id="essayBox" class="hidden">
+        <textarea id="essayInput" rows="4" class="w-full px-4 py-3" placeholder="Write your answer here (optional) — then reveal the model answer."></textarea>
+        <div id="modelBox" class="hidden mt-4 rounded-xl p-4" style="background:var(--accSoft);border:1px solid var(--accLine)">
+          <div class="label mb-2" style="color:var(--acc)">Model answer</div>
+          <ul id="modelList" class="grid gap-1 font-medium"></ul>
+        </div>
+        <div id="selfMark" class="hidden mt-4">
+          <div class="ar text-center font-bold mb-3" id="selfPrompt">قارن إجابتك بالإجابة النموذجية… الجواب صح؟</div>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="markRight" class="btn ar" style="background:var(--okBg);border:1.5px solid var(--okLine);color:var(--okText)">✅ الجواب صح</button>
+            <button id="markWrong" class="btn ar" style="background:var(--badBg);border:1.5px solid var(--badLine);color:var(--badText)">مجبتهاش المرادي 😅</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="feedback" class="hidden mt-5 rounded-xl p-4 text-sm leading-relaxed"></div>
+
+      <div class="flex justify-end mt-6 gap-3">
+        <button id="revealBtn" class="hidden btn btn-ghost">Show model answer</button>
+        <button id="submitBtn" disabled class="btn btn-acc">Submit answer</button>
+        <button id="nextBtn" class="hidden btn btn-acc">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESULT ================= -->
+<section id="view-result" class="hidden-view">
+  <div class="max-w-3xl mx-auto">
+    <div class="panel p-6 sm:p-10 text-center pop">
+      <div class="label" id="resLabel">Your score</div>
+      <div class="font-mono text-6xl sm:text-7xl font-bold mt-3" id="resPct">0%</div>
+      <div class="muted mt-1 font-mono" id="resScore"></div>
+      <div class="ar text-xl sm:text-2xl font-bold mt-5 leading-relaxed" id="resMsg"></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-8 text-left">
+        <div class="panel2 p-3"><div class="label">Lecture</div><div class="font-semibold text-sm mt-1" id="resScope"></div></div>
+        <div class="panel2 p-3"><div class="label">Difficulty</div><div class="font-semibold text-sm mt-1" id="resDiff"></div></div>
+        <div class="panel2 p-3"><div class="label">Time</div><div class="font-semibold text-sm mt-1 font-mono" id="resTime"></div></div>
+        <div class="panel2 p-3"><div class="label">Best streak</div><div class="font-semibold text-sm mt-1 font-mono" id="resStreak"></div></div>
+      </div>
+      <div class="flex flex-wrap gap-3 justify-center mt-8">
+        <button id="retryWrongBtn" class="hidden btn btn-amber"></button>
+        <button id="reviewToggle" class="btn btn-ghost">Review answers</button>
+        <button id="restartBtn" class="btn btn-acc">New exam</button>
+      </div>
+      <div class="ar text-sm muted mt-8">سبحانك اللهم وبحمدك، أشهد أن لا إله إلا أنت، أستغفرك وأتوب إليك 🤍</div>
+    </div>
+    <div id="reviewList" class="hidden mt-5 grid gap-3"></div>
+  </div>
+</section>
+
+<!-- ================= ADMIN ================= -->
+<section id="view-admin" class="hidden-view">
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+    <div>
+      <div class="label mb-1" style="color:var(--acc)">Admin</div>
+      <h1 class="font-display text-3xl font-bold">Results Dashboard</h1>
+      <p class="muted text-sm mt-1" id="adminMode"></p>
+    </div>
+    <div class="flex gap-2">
+      <button id="exportCsv" class="btn btn-ghost text-sm py-2">Export CSV</button>
+      <button id="adminLogout" class="btn btn-acc text-sm py-2">Lock &amp; exit</button>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="panel2 p-4"><div class="label">Test-takers</div><div class="font-mono text-3xl font-bold" id="stTakers">0</div><div class="text-xs muted">unique students/devices</div></div>
+    <div class="panel2 p-4"><div class="label">Attempts</div><div class="font-mono text-3xl font-bold" id="stAttempts">0</div><div class="text-xs muted">exams submitted</div></div>
+    <div class="panel2 p-4"><div class="label">Average</div><div class="font-mono text-3xl font-bold" id="stAvg">–</div><div class="text-xs muted">mean percentage</div></div>
+    <div class="panel2 p-4"><div class="label">Pass rate</div><div class="font-mono text-3xl font-bold" id="stPass">–</div><div class="text-xs muted">scored ≥ 50%</div></div>
+  </div>
+  <div class="panel overflow-hidden">
+    <div class="p-4 border-b flex flex-wrap gap-3 items-center justify-between" style="border-color:var(--line)">
+      <input id="adminSearch" placeholder="Search by name or ID…" class="px-3 py-2 text-sm w-full sm:w-72">
+      <div class="flex items-center gap-2 text-xs muted"><span class="w-2 h-2 rounded-full animate-pulse" style="background:var(--acc)"></span> Live updates</div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left label"><tr>
+          <th class="px-4 py-3">#</th><th class="px-4 py-3">Student</th><th class="px-4 py-3">Date &amp; time</th>
+          <th class="px-4 py-3">Lecture</th><th class="px-4 py-3">Difficulty</th><th class="px-4 py-3 text-right">Score</th><th class="px-4 py-3 text-right">%</th>
+        </tr></thead>
+        <tbody id="adminRows"></tbody>
+      </table>
+    </div>
+    <div id="adminEmpty" class="p-10 text-center muted hidden">No results yet.</div>
+  </div>
+</section>
+</main>
+
+<!-- toast -->
+<div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 opacity-0 pointer-events-none translate-y-4">
+  <div class="ar px-6 py-3 rounded-2xl font-bold text-lg shadow-2xl" style="background:var(--amber);color:var(--amberInk)" id="toastText"></div>
+</div>
+
+<!-- hidden code box -->
+<div id="codeBox" class="hidden fixed inset-0 z-50 grid place-items-center p-4" style="background:var(--overlay)">
+  <div class="panel w-full max-w-xs p-5 fade">
+    <input id="codeInput" type="password" autocomplete="off" placeholder="Code" class="w-full px-4 py-3">
+    <p id="codeErr" class="text-sm mt-2 hidden" style="color:var(--rose)">Invalid code.</p>
+    <button id="codeGo" class="btn btn-acc w-full mt-3">OK</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   1) FIREBASE CONFIGURATION
+   - Students can only CREATE a result (cannot read anything).
+   - No visible admin button: tap the "Nc" logo 5 times quickly, or open the
+     site URL ending in #admin, to get a code box. The right code opens the
+     dashboard and signs in to Firebase Auth as ADMIN_EMAIL (password = code),
+     so results are protected by the Firestore rules for /inorganic_results.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCJqfG042jw_bA3L_6vdMYja11re16Cx48",
+  authDomain: "bioc209-exam.firebaseapp.com",
+  projectId: "bioc209-exam",
+  storageBucket: "bioc209-exam.firebasestorage.app",
+  messagingSenderId: "877329298616",
+  appId: "1:877329298616:web:17e96833f8c3bd257c704d"
+};
+const ADMIN_EMAIL = "admin@bioc209.app";
+const COLLECTION  = "inorganic_results";
+const PASS_HASH   = "c65fee33c7c6897d28bbb7128cbc38f79f56f8d2c71f98cb3c9a26e8ca0618cf"; // SHA-256 of the code
+const LECTURE_SHARE = 0.14;   // ~14% new lecture-based questions per exam
+
+/* =====================================================================
+   2) QUESTION DATA
+   type 'mcq'  : o = options, a = correct index, e = explanation
+   type 'essay': ans = model-answer lines (student self-marks)
+   src 'bank' = course question bank · src 'lecture' = new, from lecture details
+   g = near-duplicate group (never two from one group in the same exam)
+   ===================================================================== */
+const QUESTIONS = [
+{"id": 1, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q1", "diff": "easy", "q": "Which subatomic particle determines the identity of an element?", "o": ["Electron", "Neutron", "Proton", "Photon"], "a": 2, "e": "The number of protons (atomic number, Z) defines the element; changing neutrons gives isotopes and changing electrons gives ions."},
+{"id": 2, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q2", "diff": "easy", "q": "An atom contains 11 protons, 12 neutrons, and 11 electrons. What are its atomic number and mass number?", "o": ["Z = 11; A = 12", "Z = 12; A = 23", "Z = 11; A = 23", "Z = 23; A = 11"], "a": 2, "e": "Z = number of protons = 11; mass number A = protons + neutrons = 11 + 12 = 23."},
+{"id": 3, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q3", "diff": "easy", "q": "Which statement correctly distinguishes an isotope from an ion?", "o": ["Isotopes differ in electrons; ions differ in neutrons.", "Isotopes differ in neutrons; ions differ in electrons.", "Isotopes always have different proton numbers; ions do not.", "Isotopes are always charged; ions are always neutral."], "a": 1, "e": "Isotopes have the same protons but different neutrons; ions have the same protons but a different number of electrons (they carry a charge)."},
+{"id": 4, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q4", "diff": "easy", "q": "Which particle has a −1 charge and contributes most directly to ordinary chemical behavior?", "o": ["Proton", "Neutron", "Electron", "Nucleus"], "a": 2, "e": "Electrons carry a −1 charge, and the outer (valence) electrons decide how an atom bonds and reacts."},
+{"id": 5, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q5", "diff": "easy", "q": "A neutral oxygen atom has 8 protons. How many electrons does it have?", "o": ["6", "8", "10", "16"], "a": 1, "e": "A neutral atom has equal numbers of protons and electrons, so oxygen has 8 electrons."},
+{"id": 6, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q6", "diff": "medium", "q": "Which statement about an orbital is correct?", "o": ["It is a fixed circular path followed by an electron.", "It is a region of high probability of finding an electron.", "It can contain a maximum of six electrons.", "It is the same thing as a shell."], "a": 1, "e": "An orbital is a region where an electron is most likely to be found (not a fixed path); each orbital holds at most 2 electrons."},
+{"id": 7, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q7", "diff": "easy", "q": "Which electron configuration belongs to oxygen (Z = 8)?", "o": ["1s² 2s² 2p²", "1s² 2s² 2p⁴", "1s² 2s² 2p⁶", "1s² 2p⁶"], "a": 1, "e": "Oxygen has 8 electrons: 1s² (2) + 2s² (2) + 2p⁴ (4) = 8."},
+{"id": 8, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q8", "diff": "easy", "q": "How many valence electrons does chlorine have in the simple main-group model?", "o": ["1", "2", "7", "8"], "a": 2, "e": "Chlorine is in Group 17 (3s² 3p⁵), so it has 7 valence electrons."},
+{"id": 9, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q9", "diff": "easy", "q": "Why do elements in the same main-group column often show similar chemical behavior?", "o": ["They have the same mass number.", "They have the same number of neutrons.", "They often have similar numbers of valence electrons.", "They always have the same number of electron shells."], "a": 2, "e": "Chemical behaviour is controlled mainly by valence electrons, and elements in the same group have similar valence-electron arrangements."},
+{"id": 10, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q10", "diff": "easy", "q": "Which trend is generally correct when moving down a group in the periodic table?", "o": ["Atomic radius decreases.", "Atomic radius increases.", "Electronegativity always increases.", "The number of protons decreases."], "a": 1, "e": "Going down a group adds an occupied shell, so the outer electrons are farther from the nucleus and the atomic radius increases."},
+{"id": 11, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q11", "diff": "easy", "q": "Which statement best describes first ionization energy?", "o": ["Energy released when an ion gains a neutron.", "Energy required to remove the most easily removed electron from a gaseous atom.", "Energy required to add a proton to the nucleus.", "Energy released when two atoms form a covalent bond."], "a": 1, "e": "First ionization energy is the energy needed to remove the most loosely held electron from an isolated gaseous atom.", "g": "ie_def"},
+{"id": 12, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q12", "diff": "easy", "q": "Which element would generally have the highest electronegativity among the following?", "o": ["Li", "Na", "F", "K"], "a": 2, "e": "Fluorine is the most electronegative element; electronegativity decreases down Group 1 (Li > Na > K) and all are far below F."},
+{"id": 13, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q13", "diff": "medium", "q": "Why does atomic radius generally decrease from left to right across a period?", "o": ["The number of occupied shells decreases.", "Nuclear charge increases while added electrons remain in the same principal shell.", "Neutrons disappear from the nucleus.", "The atom loses all valence electrons."], "a": 1, "e": "Across a period protons are added but electrons enter the same shell, so effective nuclear charge rises and pulls the electrons closer."},
+{"id": 14, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q14", "diff": "medium", "q": "Why do atoms form chemical bonds according to the energy-based explanation?", "o": ["Bonding always increases the total energy of the system.", "Atoms form bonds only because they all want exactly eight electrons.", "A bonded arrangement can be more stable when attractive interactions lower the total energy.", "Bonding occurs because neutrons move between atoms."], "a": 2, "e": "Bonds form when the bonded arrangement has lower total energy than the separate atoms — the system becomes more stable."},
+{"id": 15, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q15", "diff": "medium", "q": "What happens as two atoms approach each other from a large distance and move toward a stable bond distance?", "o": ["Attractive interactions become important and the total energy can decrease until a minimum is reached.", "Repulsive interactions immediately become infinite and no attraction occurs.", "The nuclei disappear.", "The electrons stop interacting with both nuclei."], "a": 0, "e": "As atoms approach, attraction lowers the energy until a minimum (the bond length); closer than that, repulsion makes the energy rise again."},
+{"id": 16, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q16", "diff": "easy", "q": "Which description best matches ionic bonding?", "o": ["Attraction between oppositely charged ions after electron transfer has produced ions.", "Sharing of one electron pair between two neutral atoms only.", "Attraction between two nuclei with no electrons involved.", "Attraction caused by hydrogen bonds only."], "a": 0, "e": "Ionic bonding is the electrostatic attraction between positive and negative ions formed by electron transfer."},
+{"id": 17, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q17", "diff": "easy", "q": "Which formula represents a neutral ionic compound formed from Mg²⁺ and Cl⁻?", "o": ["MgCl", "MgCl₂", "Mg₂Cl", "Mg₂Cl₂⁻"], "a": 1, "e": "Mg²⁺ needs two Cl⁻ ions to balance its charge: (+2) + 2(−1) = 0, giving MgCl₂."},
+{"id": 18, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q18", "diff": "medium", "q": "Which statement about an ionic solid such as NaCl is most accurate?", "o": ["It consists of separate neutral NaCl molecules packed together.", "It is an extended lattice of Na⁺ and Cl⁻ ions held by electrostatic attraction.", "It contains only covalent bonds.", "Its ions are permanently unable to separate when placed in water."], "a": 1, "e": "Solid NaCl is a giant 3-D lattice of Na⁺ and Cl⁻ ions, not discrete molecules; the ions separate when it dissolves in water."},
+{"id": 19, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q19", "diff": "easy", "q": "In a covalent bond, atoms are primarily connected by:", "o": ["sharing electron pairs", "transferring neutrons", "sharing protons", "removing all valence electrons"], "a": 0, "e": "A covalent bond is a shared pair of electrons between two atoms."},
+{"id": 20, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q20", "diff": "easy", "q": "How many total valence electrons should be counted when drawing the Lewis structure of H₂O?", "o": ["4", "6", "8", "10"], "a": 2, "e": "H₂O: 2 H × 1 + O × 6 = 8 valence electrons."},
+{"id": 21, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q21", "diff": "medium", "q": "Which sequence is the most appropriate simplified procedure for drawing a Lewis structure?", "o": ["Ignore valence electrons → place random bonds → count protons.", "Count valence electrons → choose a skeleton → add single bonds → complete outer atoms → place remaining electrons and form multiple bonds if needed.", "Draw the molecular shape first → ignore electrons → add a charge.", "Start by counting neutrons → place nuclei → add hydrogen bonds."], "a": 1, "e": "Count valence electrons → build the skeleton → add single bonds → complete the outer atoms' octets → place leftover electrons, using multiple bonds if needed."},
+{"id": 22, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q22", "diff": "easy", "q": "Which statement correctly describes the polarity of a bond?", "o": ["A polar bond always means the whole molecule is polar.", "A polar bond has an unequal sharing of bonding electrons because of an electronegativity difference.", "A polar bond contains no electrons.", "Bond polarity is determined only by the number of neutrons."], "a": 1, "e": "A polar bond has unequal sharing because the two atoms differ in electronegativity; a polar bond does not automatically make the molecule polar."},
+{"id": 23, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q23", "diff": "medium", "q": "Why is CO₂ nonpolar overall even though each C=O bond is polar?", "o": ["CO₂ has no electrons.", "The molecule is linear, so the two bond dipoles point in opposite directions and cancel.", "Carbon and oxygen have identical electronegativities.", "CO₂ is ionic rather than covalent."], "a": 1, "e": "CO₂ is linear, so the two equal C=O bond dipoles point in opposite directions and cancel.", "g": "co2"},
+{"id": 24, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q24", "diff": "medium", "q": "Which molecular shape is expected for NH₃ in the VSEPR model?", "o": ["Linear", "Trigonal planar", "Tetrahedral", "Trigonal pyramidal"], "a": 3, "e": "NH₃ has 3 bonding pairs + 1 lone pair (tetrahedral electron geometry), so the molecular shape is trigonal pyramidal."},
+{"id": 25, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q25", "diff": "hard", "q": "Which statement correctly distinguishes electron geometry from molecular shape in H₂O?", "o": ["Both are always identical.", "Electron geometry counts only bonded atoms, while molecular shape counts only lone pairs.", "H₂O has tetrahedral electron geometry but a bent molecular shape because lone pairs occupy electron regions.", "H₂O has linear electron geometry and bent molecular shape."], "a": 2, "e": "Water has 4 electron regions (2 bonds + 2 lone pairs) → tetrahedral electron geometry, but only the atoms are counted for shape → bent."},
+{"id": 26, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q26", "diff": "medium", "q": "Which interaction of the following is specifically called a hydrogen bond?", "o": ["The covalent O–H bond inside one water molecule", "The attraction between a partially positive H attached to an electronegative atom and an electronegative atom on another molecule or region", "The metallic bond between two copper atoms", "The attraction between two protons in a nucleus"], "a": 1, "e": "A hydrogen bond is an attraction between an H bonded to N, O or F and a lone pair on another electronegative atom; the O–H bond inside the molecule is covalent."},
+{"id": 27, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q27", "diff": "easy", "q": "Which property of metals is most directly explained by relatively mobile/delocalized valence electrons?", "o": ["Electrical conductivity", "Formation of hydrogen bonds", "Isotope formation", "Atomic number"], "a": 0, "e": "Delocalized (mobile) valence electrons can move through the metal, so metals conduct electricity."},
+{"id": 28, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q28", "diff": "medium", "q": "An atom has the electron configuration 1s² 2s² 2p⁶ 3s¹. Which statement is correct?", "o": ["It has 7 valence electrons and commonly gains one electron.", "It is in Period 3, has one valence electron, and commonly forms a +1 ion.", "It is in Period 2 and commonly forms a −1 ion.", "It has no valence electrons."], "a": 1, "e": "1s² 2s² 2p⁶ 3s¹ is sodium: highest shell n = 3 → Period 3, one valence electron → forms Na⁺."},
+{"id": 29, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q29", "diff": "hard", "q": "Consider two particles: X has 17 protons, 18 neutrons, and 18 electrons; Y has 17 protons, 20 neutrons, and 17 electrons. Which statement is correct?", "o": ["X and Y are different elements because they have different neutron numbers.", "X and Y are the same isotope and both are neutral.", "X and Y are isotopes of the same element, but X is an ion while Y is neutral.", "X is neutral and Y is a +1 ion."], "a": 2, "e": "Both have 17 protons (chlorine) but different neutrons → isotopes. X has 18 electrons (Cl⁻ ion); Y has 17 electrons (neutral)."},
+{"id": 30, "scope": "L1", "src": "bank", "type": "mcq", "tag": "Question Bank · Q30", "diff": "hard", "q": "A student says: “H₂O and CO₂ both contain polar bonds, so both molecules must be polar.” Which response best corrects the statement?", "o": ["Correct; any molecule with a polar bond is polar.", "Incorrect; molecular polarity depends on both bond polarity and molecular shape. H₂O is bent, so its bond dipoles do not cancel, whereas linear CO₂ has cancellation.", "Incorrect; neither H₂O nor CO₂ contains polar bonds.", "Correct; molecular shape has no effect on polarity."], "a": 1, "e": "Molecular polarity needs polar bonds AND a shape that doesn't cancel them: bent H₂O is polar, linear CO₂ is not.", "g": "co2"},
+{"id": 31, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q31", "diff": "easy", "q": "According to the modern periodic law, what happens when elements are arranged by increasing atomic number?", "o": ["Their properties repeat in a regular pattern.", "All elements in one period have identical properties.", "Atomic mass alone determines every chemical property.", "The number of electron shells stays the same for all elements."], "a": 0, "e": "The modern periodic law: when elements are arranged by increasing atomic number, their properties repeat periodically."},
+{"id": 32, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q32", "diff": "easy", "q": "Which Group 1 element generally has the greatest metallic character?", "o": ["Lithium (Li)", "Sodium (Na)", "Potassium (K)", "All three have equal metallic character."], "a": 2, "e": "Metallic character increases down a group because the outer electron is lost more easily; K is the lowest of the three."},
+{"id": 33, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q33", "diff": "medium", "q": "Compared with a neutral sodium atom, the Na+ ion is smaller mainly because it", "o": ["has gained an electron in a new shell.", "has lost its outer 3s electron and has one fewer occupied shell.", "has gained protons in its nucleus.", "has a lower nuclear charge."], "a": 1, "e": "Na loses its 3s electron, so Na⁺ (1s² 2s² 2p⁶) has one fewer occupied shell, and the remaining electrons are held more tightly."},
+{"id": 34, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q34", "diff": "hard", "q": "Why does effective nuclear charge generally increase from left to right across a period?", "o": ["The number of occupied shells increases at every step.", "Shielding rises faster than the number of protons.", "The nucleus gains protons while added electrons enter the same general shell and do not fully cancel the added attraction.", "The atoms lose all their valence electrons."], "a": 2, "e": "Each step across adds a proton, but the new electron goes into the same shell and shields poorly, so Z_eff rises."},
+{"id": 35, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q35", "diff": "medium", "q": "Why does atomic radius generally increase down a group?", "o": ["Each step down adds an occupied electron shell, increasing the valence-electron distance and shielding.", "The number of protons decreases down a group.", "Effective nuclear charge becomes exactly zero.", "Electrons move into a shell closer to the nucleus."], "a": 0, "e": "Each step down a group adds a new occupied shell, so outer electrons are farther away and more shielded."},
+{"id": 36, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q36", "diff": "hard", "q": "Which sequence gives the isoelectronic species in order from largest radius to smallest radius?", "o": ["Al3+ > Mg2+ > Na+ > Ne > F- > O2- > N3-", "Ne > N3- > O2- > F- > Al3+ > Na+ > Mg2+", "N3- > O2- > F- > Ne > Na+ > Mg2+ > Al3+", "F- > O2- > N3- > Na+ > Ne > Mg2+ > Al3+"], "a": 2, "e": "All have 10 electrons. More protons pull the same electrons closer, so radius falls as nuclear charge rises: N³⁻ (7p) > O²⁻ > F⁻ > Ne > Na⁺ > Mg²⁺ > Al³⁺ (13p)."},
+{"id": 37, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q37", "diff": "easy", "q": "What does first ionization energy measure?", "o": ["The energy released when an atom forms a chemical bond.", "The energy required to remove an electron from an isolated gaseous atom in its ground state.", "The attraction an atom has for shared electrons in a bond.", "The number of electrons in the outer shell."], "a": 1, "e": "First ionization energy = energy to remove one electron from an isolated gaseous atom in its ground state.", "g": "ie_def"},
+{"id": 38, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q38", "diff": "hard", "q": "Why is the first ionization energy of boron lower than that of beryllium, despite boron having more protons?", "o": ["Boron has fewer occupied shells than beryllium.", "The electron removed from boron is in a higher-energy 2p subshell, while beryllium loses a 2s electron.", "Beryllium has a larger nuclear charge.", "The 2s electron in beryllium is farther from the nucleus than the 2p electron in boron."], "a": 1, "e": "Be loses a 2s electron; B loses a 2p electron, which is higher in energy and slightly shielded by 2s, so it is easier to remove."},
+{"id": 39, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q39", "diff": "hard", "q": "Why is the first ionization energy of oxygen slightly lower than that of nitrogen?", "o": ["Oxygen has fewer protons than nitrogen.", "Oxygen has no paired electrons in its 2p subshell.", "An electron is removed from a new shell in oxygen.", "Pairing in one of oxygen's 2p orbitals creates extra electron-electron repulsion, making an electron slightly easier to remove."], "a": 3, "e": "N has three unpaired 2p electrons; in O one 2p orbital holds a pair, and the extra repulsion makes one electron easier to remove."},
+{"id": 40, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q40", "diff": "hard", "q": "A large jump occurs between the second and third ionization energies of an element. What is the most likely conclusion?", "o": ["The atom has two valence electrons; the third removal begins removing a core electron.", "The atom has three valence electrons and no core electrons.", "The third electron is always removed more easily than the second.", "The atom must be a noble gas."], "a": 0, "e": "A big jump after the 2nd ionization means the 3rd electron comes from an inner (core) shell — the atom has 2 valence electrons (Group 2)."},
+{"id": 41, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q41", "diff": "medium", "q": "What does a negative electron-affinity value mean?", "o": ["The atom cannot accept an electron under any conditions.", "The atom's electronegativity is zero.", "The electron-addition process releases energy.", "The electron-removal process releases energy."], "a": 2, "e": "By convention a negative electron affinity means energy is released when the gaseous atom gains an electron."},
+{"id": 42, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q42", "diff": "medium", "q": "Which statement correctly distinguishes electron affinity from electronegativity?", "o": ["Both describe only the removal of an electron from a gaseous atom.", "Electron affinity describes the energy change when a gaseous atom gains an electron; electronegativity describes attraction for shared electrons in a bond.", "Electronegativity measures the radius of an isolated ion.", "Electron affinity is the same thing as metallic character."], "a": 1, "e": "Electron affinity = energy change when a gaseous atom gains an electron; electronegativity = an atom's pull on shared electrons in a bond."},
+{"id": 43, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q43", "diff": "hard", "q": "Why is the first electron affinity of chlorine more negative than that of fluorine?", "o": ["Chlorine has no nuclear charge.", "Fluorine has a completely empty outer shell.", "Chlorine attracts no electrons because it is larger.", "The incoming electron experiences less crowding in chlorine's larger 3p region than in fluorine's compact 2p region."], "a": 3, "e": "F's 2p region is very small, so an incoming electron is strongly repelled by the electrons already there; Cl's larger 3p region reduces this crowding."},
+{"id": 44, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q44", "diff": "medium", "q": "Which sequence correctly describes the typical oxide character across Period 3 from sodium oxide to aluminum oxide to sulfur trioxide?", "o": ["Basic, amphoteric, acidic", "Acidic, basic, amphoteric", "Amphoteric, acidic, basic", "All three are strongly basic"], "a": 0, "e": "Across Period 3: Na₂O is basic (metal), Al₂O₃ is amphoteric, SO₃ is acidic (non-metal).", "g": "oxide"},
+{"id": 45, "scope": "L2", "src": "bank", "type": "mcq", "tag": "Question Bank · Q45", "diff": "medium", "q": "Which ion is expected to have the greater charge density, and why?", "o": ["Ca2+, because it is larger than Mg2+.", "Ca2+, because it has a lower positive charge.", "Mg2+, because it has the same charge as Ca2+ concentrated into a smaller ion.", "Mg2+, because its charge is negative."], "a": 2, "e": "Same +2 charge, but Mg²⁺ is smaller, so its charge is concentrated in a smaller volume → higher charge density."},
+{"id": 46, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q46", "diff": "easy", "q": "What is a ligand in coordination chemistry?", "o": ["An ion that must always be outside square brackets.", "An atom, ion, or molecule that binds to a central metal through a donor atom.", "A substance that can only form ionic bonds with metals.", "The number of electron shells in a metal atom."], "a": 1, "e": "A ligand is an atom, ion or molecule that binds to the central metal through a donor atom with a lone pair.", "g": "ligand"},
+{"id": 47, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q47", "diff": "medium", "q": "In the simple coordinate-bond model, what does a ligand contribute to the metal-ligand bond?", "o": ["One proton from its nucleus.", "An electron removed from the metal.", "Both electrons in the shared bonding pair, supplied from a lone pair.", "A neutron to the metal nucleus."], "a": 2, "e": "In a coordinate (dative) bond, the ligand donates both electrons of the shared pair from its lone pair."},
+{"id": 48, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q48", "diff": "easy", "q": "In a typical octahedral coordination complex, how many donor atoms are directly attached to the central metal?", "o": ["Two", "Four", "Five", "Six"], "a": 3, "e": "Octahedral complexes have six donor atoms around the central metal (coordination number 6)."},
+{"id": 49, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q49", "diff": "medium", "q": "What is the coordination number of [Co(en)3]3+ if each en ligand is bidentate?", "o": ["Three, because there are three ligand molecules.", "Six, because each of the three en ligands contributes two donor atoms.", "Two, because en contains two nitrogen atoms in the formula.", "Nine, because the complex has three ligands and a 3+ charge."], "a": 1, "e": "Coordination number counts donor atoms, not ligands: 3 en × 2 donor N atoms = 6."},
+{"id": 50, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q50", "diff": "medium", "q": "What is the oxidation state of iron in [Fe(CN)6]4- if each cyanido ligand has a charge of -1?", "o": ["+2", "+4", "-2", "+6"], "a": 0, "e": "x + 6(−1) = −4 → x = +2, so iron is Fe(II)."},
+{"id": 51, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q51", "diff": "medium", "q": "In the formula [Co(NH3)6]Cl3, which statement is correct?", "o": ["The three chloride ions are all directly bonded to cobalt inside the brackets.", "Ammonia has a charge of -1, so cobalt must be neutral.", "The six NH3 ligands are inside the coordination entity, while three chloride counterions are outside the brackets.", "The compound contains six chloride counterions."], "a": 2, "e": "Inside the brackets: Co³⁺ with six NH₃ ligands. The three Cl⁻ outside the brackets are counter-ions balancing the 3+ charge."},
+{"id": 52, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q52", "diff": "medium", "q": "Which statement about ethane-1,2-diamine (en) and EDTA is correct?", "o": ["Both are always monodentate ligands.", "En binds through one oxygen atom, while EDTA cannot bind metals.", "En and EDTA must each carry a positive charge to act as ligands.", "En is bidentate, while EDTA can bind a metal through multiple donor atoms."], "a": 3, "e": "en has two N donor atoms (bidentate); EDTA is a hexadentate chelating ligand that binds through several N and O donors."},
+{"id": 53, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q53", "diff": "hard", "q": "What is the name given for [Co(NH3)5Cl]Cl2?", "o": ["Hexaamminecobalt(II) chloride", "Pentaamminechloridocobalt(III) chloride", "Pentaamminecobalt(I) dichloride", "Chloridopentaamminecobalt(II) chloride"], "a": 1, "e": "Ligands in alphabetical order (ammine before chlorido), then the metal with its oxidation state: x + 0 − 1 = +2 → Co(III). Counter-ion: chloride."},
+{"id": 54, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q54", "diff": "medium", "q": "When a coordination complex is negatively charged, what commonly happens to the metal name in its systematic name?", "o": ["The metal name commonly ends in '-ate', as in ferrate for an anionic iron complex.", "The metal name must be omitted.", "The name always ends in '-ide', regardless of the metal.", "The metal oxidation state is never shown."], "a": 0, "e": "In an anionic complex the metal name takes the ending '-ate' (e.g. ferrate, cobaltate)."},
+{"id": 55, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q55", "diff": "medium", "q": "For the square-planar complex [Pt(NH3)2Cl2], what is the difference between cis and trans forms?", "o": ["Cis and trans mean the platinum oxidation state is different.", "Cis has no chloride ligands, while trans has two.", "Cis has the two chloride ligands adjacent; trans has them opposite each other.", "Cis is always a mirror image of trans."], "a": 2, "e": "Cis = the two Cl ligands are next to each other (90°); trans = opposite each other (180°)."},
+{"id": 56, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q56", "diff": "medium", "q": "What are enantiomers in coordination chemistry?", "o": ["Complexes with different central metals but identical colors.", "Complexes that differ only in total charge.", "Complexes in which a ligand is always outside the brackets.", "Non-superimposable mirror-image forms with the same connectivity."], "a": 3, "e": "Enantiomers are non-superimposable mirror images with the same connectivity (optical isomers)."},
+{"id": 57, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q57", "diff": "medium", "q": "How can EDTA be used in complexometric titration?", "o": ["It changes the number of protons in the metal nucleus.", "The amount of EDTA required to bind the metal can be used to estimate the metal content.", "It prevents all metal ions from forming complexes.", "It directly measures atomic radius without reacting with metals."], "a": 1, "e": "EDTA binds metal ions in a 1:1 ratio, so the volume of EDTA needed at the end point gives the amount of metal."},
+{"id": 58, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q58", "diff": "hard", "q": "A complex has a large formation constant but exchanges ligands slowly. Which interpretation is correct?", "o": ["The complex is thermodynamically favored at equilibrium and may also be kinetically inert; these are different properties.", "A large formation constant proves that ligand exchange must be fast.", "Slow ligand exchange proves the complex is thermodynamically unstable.", "Formation constants measure only the color of a complex."], "a": 0, "e": "Formation constant describes thermodynamic stability; ligand-exchange rate describes kinetics (inert vs labile). A complex can be stable and inert at the same time."},
+{"id": 59, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q59", "diff": "hard", "q": "For [Co(en)2Cl2]+, what are the cobalt oxidation state and coordination number, respectively?", "o": ["+1 and 4", "+2 and 4", "+3 and 6", "+3 and 2"], "a": 2, "e": "x + 2(0) + 2(−1) = +1 → x = +3. Donor atoms: 2 en × 2 + 2 Cl = 6."},
+{"id": 60, "scope": "L4", "src": "bank", "type": "mcq", "tag": "Question Bank · Q60", "diff": "medium", "q": "Which statement best explains why many transition-metal coordination compounds are colored?", "o": ["They all contain colored ligands, so the metal orbitals are irrelevant.", "The complex always absorbs every wavelength of visible light equally.", "Color is caused only by counterions outside the coordination brackets.", "Ligands can split the metal's d-orbital energies, allowing absorption of particular wavelengths of visible light."], "a": 3, "e": "Ligands split the d orbitals into different energy levels; electrons absorb visible light to jump between them, and we see the complementary colour.", "g": "colour"},
+{"id": 61, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q61", "diff": "easy", "q": "Which groups make up the main-group region of the periodic table?", "o": ["Groups 1, 2 and 13–18", "Groups 3–12 only", "Groups 1–12 only", "Groups 13–18 only"], "a": 0, "e": "The main-group (s- and p-block) elements are Groups 1, 2 and 13–18."},
+{"id": 62, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q62", "diff": "easy", "q": "What positive ion do Group 1 alkali metals commonly form?", "o": ["M²⁺", "M⁺", "M⁻", "M³⁺"], "a": 1, "e": "Alkali metals have one valence electron (ns¹) and lose it to form M⁺."},
+{"id": 63, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q63", "diff": "easy", "q": "Which statement best describes silicon?", "o": ["It is a noble gas that rarely reacts.", "It is an alkali metal that forms Si⁺.", "It is a metalloid used in semiconductors.", "It is a halogen that forms Si⁻."], "a": 2, "e": "Silicon is a metalloid (semi-conductor) widely used in electronics."},
+{"id": 64, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q64", "diff": "medium", "q": "Why does the reactivity of Group 1 metals generally increase down the group?", "o": ["The atoms have fewer occupied electron shells.", "The outer electron becomes easier to remove because of greater distance and shielding.", "The metals gain more outer electrons as they descend.", "The metals become nonmetals down the group."], "a": 1, "e": "Down Group 1 the outer electron is farther from the nucleus and more shielded, so it is lost more easily → more reactive."},
+{"id": 65, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q65", "diff": "easy", "q": "What is the usual formula of a chloride formed by a Group 2 metal M?", "o": ["MCl", "M2Cl", "MCl3", "MCl2"], "a": 3, "e": "Group 2 metals form M²⁺ ions, which need two Cl⁻ ions: MCl₂."},
+{"id": 66, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q66", "diff": "medium", "q": "Why is borosilicate glass useful for laboratory glassware?", "o": ["It is made only of elemental silicon.", "It resists dissolving rapidly in water.", "It resists rapid temperature changes better than ordinary glass.", "It conducts electricity as well as a metal."], "a": 2, "e": "Borosilicate glass has a low thermal expansion, so it resists cracking when heated or cooled quickly."},
+{"id": 67, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q67", "diff": "medium", "q": "Which feature explains why graphite can conduct electricity better than diamond?", "o": ["Graphite has mobile, delocalized electrons in its layered structure.", "Graphite contains metal ions between its carbon atoms.", "Diamond is made of a different element from graphite.", "Diamond contains no covalent bonds."], "a": 0, "e": "Each C in graphite forms 3 bonds, leaving one delocalized electron per atom that moves between layers; diamond uses all 4 electrons in bonds."},
+{"id": 68, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q68", "diff": "medium", "q": "Why is nitrogen gas (N2) relatively unreactive under ordinary conditions?", "o": ["Nitrogen has no valence electrons.", "Nitrogen is a noble gas.", "The N≡N triple bond is very strong.", "Nitrogen always exists as N3− in air."], "a": 2, "e": "The N≡N triple bond is very strong and needs a lot of energy to break, so N₂ is unreactive."},
+{"id": 69, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q69", "diff": "medium", "q": "What happens when ammonia dissolves in water?", "o": ["NH3 donates an electron to form Na+.", "Some NH3 accepts a proton from water, forming NH4+ and OH−.", "All NH3 forms nitrate immediately.", "NH3 releases H+ and makes the solution strongly acidic."], "a": 1, "e": "NH₃ is a weak base: NH₃ + H₂O ⇌ NH₄⁺ + OH⁻, so the solution is weakly alkaline."},
+{"id": 70, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q70", "diff": "medium", "q": "Why can excess phosphate entering a lake or river be environmentally harmful?", "o": ["It removes all salts from the water immediately.", "It prevents all organisms from photosynthesizing.", "It converts every dissolved ion into a gas.", "It can promote algal blooms and later oxygen depletion."], "a": 3, "e": "Excess phosphate fertilizes algae (eutrophication); when they die, bacteria decompose them and use up dissolved oxygen."},
+{"id": 71, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q71", "diff": "easy", "q": "Which equation represents the catalase-catalyzed breakdown of hydrogen peroxide?", "o": ["2 H2O2 → 2 H2O + O2", "H2O + O2 → H2O2", "H2O2 → H2 + O2", "2 H2O + O2 → 2 H2O2"], "a": 0, "e": "Catalase decomposes hydrogen peroxide: 2 H₂O₂ → 2 H₂O + O₂."},
+{"id": 72, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q72", "diff": "easy", "q": "Which statement about noble gases is correct?", "o": ["They normally form diatomic molecules and react readily with water.", "They all have two valence electrons.", "Their filled outer shells make them relatively unreactive, and they normally occur as individual atoms.", "They are all radioactive."], "a": 2, "e": "Noble gases have filled outer shells, so they are very unreactive and exist as single atoms (monatomic)."},
+{"id": 73, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q73", "diff": "medium", "q": "Which description correctly summarizes the broad oxide trend across Period 3?", "o": ["All oxides are acidic, including Na2O and MgO.", "Oxides become generally less basic and more acidic across the period, with Al2O3 amphoteric.", "All metal oxides are amphoteric and all nonmetal oxides are basic.", "Oxide behavior is unrelated to whether the element is metallic or nonmetallic."], "a": 1, "e": "Across Period 3 the oxides change from basic (Na₂O, MgO) through amphoteric (Al₂O₃) to acidic (SiO₂, P₄O₁₀, SO₃).", "g": "oxide"},
+{"id": 74, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q74", "diff": "medium", "q": "A solution contains potassium bromide. Chlorine is added and bromine forms. What does this result show?", "o": ["Bromine is more reactive than chlorine and oxidizes chloride.", "Potassium is reduced to potassium metal.", "Chlorine cannot react with halide ions.", "Chlorine is more reactive than bromine and converts bromide ions into bromine."], "a": 3, "e": "A more reactive halogen displaces a less reactive one: Cl₂ + 2Br⁻ → 2Cl⁻ + Br₂."},
+{"id": 75, "scope": "L5", "src": "bank", "type": "mcq", "tag": "Question Bank · Q75", "diff": "hard", "q": "Which statement correctly distinguishes silicon, silica and silicones?", "o": ["Silicon is an element; silica is SiO2; silicones are polymers with a Si–O backbone and organic side groups.", "Silicon and silica are the same pure element, while silicones are metal alloys.", "Silica is a polymer of carbon, and silicon is a gas.", "Silicones are simple salts containing only Si4+ and O2− ions."], "a": 0, "e": "Silicon = element; silica = SiO₂; silicones = polymers with an –Si–O–Si– backbone and organic side groups."},
+{"id": 76, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q76", "diff": "easy", "q": "Where are the transition metals located in the periodic table?", "o": ["Groups 1 and 2, in the s-block", "Groups 13–18, in the p-block", "Groups 3–12, in the central d-block", "Only in Period 1"], "a": 2, "e": "Transition metals are in Groups 3–12, the central d-block."},
+{"id": 77, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q77", "diff": "easy", "q": "What is the oxidation state of iron in FeCl3?", "o": ["0", "+3", "+2", "−3"], "a": 1, "e": "FeCl₃: x + 3(−1) = 0 → x = +3."},
+{"id": 78, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q78", "diff": "medium", "q": "Why is Zn2+ diamagnetic?", "o": ["It contains no electrons.", "It has five unpaired d electrons.", "It has a partly filled 3d subshell.", "Its 3d subshell is full, so its d electrons are paired."], "a": 3, "e": "Zn²⁺ is [Ar] 3d¹⁰ — all d electrons are paired, so it is diamagnetic."},
+{"id": 79, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q79", "diff": "medium", "q": "When a common Fe2+ ion forms from a neutral iron atom, which electrons are removed first?", "o": ["The 4s electrons", "All 3d electrons", "The inner 2p electrons", "No electrons are removed"], "a": 0, "e": "For transition metals the 4s electrons are lost first: Fe [Ar] 3d⁶ 4s² → Fe²⁺ [Ar] 3d⁶."},
+{"id": 80, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q80", "diff": "medium", "q": "What is the observed ground-state electron configuration of chromium?", "o": ["[Ar] 3d4 4s2", "[Ar] 3d6", "[Ar] 3d5 4s1", "[Ar] 3d10 4s1"], "a": 2, "e": "Chromium is an exception: [Ar] 3d⁵ 4s¹, because a half-filled d subshell is extra stable."},
+{"id": 81, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q81", "diff": "easy", "q": "Which change represents oxidation?", "o": ["Cu2+ + 2e− → Cu(s)", "Fe2+ → Fe3+ + e−", "Fe3+ + e− → Fe2+", "Cl2 + 2e− → 2Cl−"], "a": 1, "e": "Oxidation is loss of electrons (OIL RIG): Fe²⁺ → Fe³⁺ + e⁻."},
+{"id": 82, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q82", "diff": "easy", "q": "What does a catalyst do in the energy-profile explanation?", "o": ["It raises the activation-energy barrier.", "It changes the starting and final energy levels of the reaction.", "It is consumed completely to form the products.", "It provides a pathway with a lower activation-energy barrier and is regenerated overall."], "a": 3, "e": "A catalyst provides an alternative pathway with a lower activation energy and is regenerated at the end; it does not change ΔH."},
+{"id": 83, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q83", "diff": "easy", "q": "What is a ligand in a coordination complex?", "o": ["An ion or molecule that donates an electron pair to the metal center", "A metal atom that always has oxidation state zero", "A substance that must be a negatively charged ion", "An electron removed from a metal atom"], "a": 0, "e": "A ligand donates an electron pair to the metal centre; it can be neutral (H₂O, NH₃) or negative (Cl⁻, CN⁻).", "g": "ligand"},
+{"id": 84, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q84", "diff": "medium", "q": "What is the main explanation given for the color of many transition-metal complexes?", "o": ["They all reflect every wavelength of visible light.", "They contain only colorless d0 ions.", "They absorb some visible wavelengths through transitions between d-derived energy levels.", "Their color is caused only by their temperature."], "a": 2, "e": "Colour comes from absorbing particular visible wavelengths when electrons move between split d-orbital energy levels.", "g": "colour"},
+{"id": 85, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q85", "diff": "medium", "q": "What product and appearance are expected when Fe3+ reacts with hydroxide ions?", "o": ["Fe(OH)2, a blue precipitate", "Fe(OH)3, a brown or reddish-brown precipitate", "Fe metal, a silver precipitate", "FeO2, a purple solution"], "a": 1, "e": "Fe³⁺ + 3OH⁻ → Fe(OH)₃, a reddish-brown precipitate (Fe²⁺ would give green Fe(OH)₂)."},
+{"id": 86, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q86", "diff": "medium", "q": "Why does chromium help stainless steel resist corrosion?", "o": ["It makes the steel dissolve rapidly in water.", "It removes all iron from the alloy.", "It prevents metallic bonding from occurring.", "It helps form a thin, protective chromium-rich oxide layer on the surface."], "a": 3, "e": "Chromium forms a thin, protective Cr₂O₃ layer that seals the surface and re-forms if scratched (passivation)."},
+{"id": 87, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q87", "diff": "medium", "q": "Which metal-to-biological-role pairing is correct?", "o": ["Cobalt — part of vitamin B12", "Zinc — oxygen transport in hemoglobin in place of iron", "Gold — required in all enzymes for ATP binding", "Sodium — the metal center of cytochrome c oxidase"], "a": 0, "e": "Cobalt is the central metal of vitamin B12 (cobalamin). Haemoglobin uses iron, and cytochrome c oxidase uses iron and copper."},
+{"id": 88, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q88", "diff": "medium", "q": "In neutral KMnO4, potassium is +1 and oxygen is −2. What is the oxidation state of manganese?", "o": ["+2", "+4", "+7", "−7"], "a": 2, "e": "KMnO₄: (+1) + x + 4(−2) = 0 → x = +7."},
+{"id": 89, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q89", "diff": "hard", "q": "Permanganate (MnO4−) is purple even though Mn(VII) is d0. Which explanation is correct?", "o": ["The manganese ion has five unpaired d electrons.", "Color can arise from ligand-to-metal charge transfer, so a d–d transition is not required.", "All d0 compounds must be purple.", "The purple color proves that manganese is in oxidation state −7."], "a": 1, "e": "Mn(VII) has no d electrons, so no d–d transition is possible; the purple colour comes from charge transfer between the oxygen ligands and the metal."},
+{"id": 90, "scope": "L6", "src": "bank", "type": "mcq", "tag": "Question Bank · Q90", "diff": "hard", "q": "Why is zinc not considered a transition element under the strict electronic definition?", "o": ["Zinc is not located in the d-block.", "Zinc cannot form ions or coordinate to ligands.", "Zinc has no electrons in any d orbital as an atom or ion.", "The zinc atom has a filled 3d subshell and Zn2+ is also 3d10, so neither has a partly filled d subshell."], "a": 3, "e": "A transition element must have a partly filled d subshell in the atom or a common ion. Zn is 3d¹⁰ and Zn²⁺ is 3d¹⁰, so it does not qualify."},
+{"id": 91, "scope": "L2", "src": "bank", "type": "essay", "tag": "Question Bank · Short-answer 1", "diff": "easy", "q": "Mention 2 of the periodic trends and properties.", "ans": ["Any two of: Atomic radius – Electronegativity – Electron affinity – Ionization energy – Metallic character"]},
+{"id": 92, "scope": "L2", "src": "bank", "type": "essay", "tag": "Question Bank · Short-answer 2", "diff": "medium", "q": "List 2 metal oxides: one basic oxide and one amphoteric oxide.", "ans": ["Basic oxide: Na₂O or MgO", "Amphoteric oxide: Al₂O₃"]},
+{"id": 93, "scope": "L4", "src": "bank", "type": "essay", "tag": "Question Bank · Short-answer 3", "diff": "easy", "q": "Enumerate one neutral ligand molecule and one anionic ligand.", "ans": ["Neutral ligand: H₂O (aqua) or NH₃ (ammine)", "Anionic ligand: Cl⁻ (chlorido), CN⁻ (cyanido) or OH⁻ (hydroxido)"]},
+{"id": 94, "scope": "L5", "src": "bank", "type": "essay", "tag": "Question Bank · Short-answer 4", "diff": "easy", "q": "List 2 main-group metalloids.", "ans": ["Boron (B) and silicon (Si)"]},
+{"id": 95, "scope": "L6", "src": "bank", "type": "essay", "tag": "Question Bank · Short-answer 5", "diff": "medium", "q": "Enumerate 2 transition metals having electron-configuration exceptions.", "ans": ["Chromium (Cr): [Ar] 3d⁵ 4s¹", "Copper (Cu): [Ar] 3d¹⁰ 4s¹"]},
+{"id": 96, "scope": "L1", "src": "lecture", "type": "mcq", "tag": "Lecture 1 · New", "diff": "medium", "q": "Which rule does hydrogen follow instead of the octet rule?", "o": ["The duet rule — its first shell is filled by 2 electrons", "Hund's rule — it needs 3 unpaired electrons", "The octet rule — it needs 8 electrons", "The 18-electron rule"], "a": 0, "e": "Lecture 1 (octet rule slide): H follows a duet rule because its first shell can hold only 2 electrons, not 8."},
+{"id": 97, "scope": "L1", "src": "lecture", "type": "mcq", "tag": "Lecture 1 · New", "diff": "hard", "q": "According to the common-shapes slide, what is the approximate bond angle in H₂O?", "o": ["~104.5°", "~107°", "~109.5°", "~120°"], "a": 0, "e": "Lecture 1: CH₄ 109.5°, NH₃ ~107° (1 lone pair), H₂O ~104.5° (2 lone pairs). More lone pairs squeeze the bond angle."},
+{"id": 98, "scope": "L2", "src": "lecture", "type": "mcq", "tag": "Lecture 2 · New", "diff": "hard", "q": "For the same element, which order of radius definitions is correct?", "o": ["Covalent radius < Metallic radius < Van der Waals radius", "Van der Waals radius < Covalent radius < Metallic radius", "Metallic radius < Covalent radius < Van der Waals radius", "All three radii are always equal"], "a": 0, "e": "Lecture 2: bonded atoms share electrons and sit closest (covalent); metal atoms touch as packed spheres (metallic); non-bonded atoms are farthest apart (Van der Waals)."},
+{"id": 99, "scope": "L2", "src": "lecture", "type": "mcq", "tag": "Lecture 2 · New", "diff": "medium", "q": "Which ion is more polarizable, and why?", "o": ["I⁻, because its larger, more diffuse electron cloud is easier to distort", "F⁻, because it is smaller", "F⁻, because it has more protons", "Both are equal because they have the same charge"], "a": 0, "e": "Lecture 2: polarizability generally increases down a group — bigger, more diffuse electron clouds are easier to distort."},
+{"id": 100, "scope": "L4", "src": "lecture", "type": "mcq", "tag": "Lecture 4 · New", "diff": "medium", "q": "In the Lewis acid–base picture of a coordinate bond, what is the role of the central metal?", "o": ["Lewis acid — it accepts the electron pair", "Lewis base — it donates the electron pair", "Brønsted acid — it donates a proton", "It supplies both electrons of the bond"], "a": 0, "e": "Lecture 4: the ligand (lone-pair donor) is a Lewis base; the metal centre (electron-pair acceptor) is a Lewis acid."},
+{"id": 101, "scope": "L4", "src": "lecture", "type": "mcq", "tag": "Lecture 4 · New", "diff": "hard", "q": "[Cr(H₂O)₆]Cl₃ (violet) and [Cr(H₂O)₅Cl]Cl₂·H₂O (blue-green) are an example of:", "o": ["Structural isomers — a Cl is inside the brackets in one and outside in the other", "Geometric (cis/trans) isomers", "Optical isomers (enantiomers)", "Two different oxidation states of chromium"], "a": 0, "e": "Lecture 4: structural isomers differ in connectivity — here a group is a ligand in one compound but a counterion in the other."},
+{"id": 102, "scope": "L5", "src": "lecture", "type": "mcq", "tag": "Lecture 5 · New", "diff": "medium", "q": "Which Group 2 metal reacts rapidly with cold water, while magnesium reacts only very slowly?", "o": ["Calcium", "Beryllium", "Sodium", "Aluminum"], "a": 0, "e": "Lecture 5 (Groups 1 and 2 compared): Mg reacts very slowly with cold water while Ca reacts rapidly."},
+{"id": 103, "scope": "L6", "src": "lecture", "type": "mcq", "tag": "Lecture 6 · New", "diff": "easy", "q": "Fe²⁺ and Fe³⁺ are commonly called, respectively:", "o": ["Ferrous and ferric", "Ferric and ferrous", "Ferrate and ferrite", "Cuprous and cupric"], "a": 0, "e": "Lecture 6: Fe²⁺ is ferrous and Fe³⁺ is ferric (e.g. FeO = ferrous oxide, Fe₂O₃ = ferric oxide)."},
+{"id": 104, "scope": "L6", "src": "lecture", "type": "mcq", "tag": "Lecture 6 · New", "diff": "medium", "q": "Which zinc-containing enzyme catalyses the reversible conversion of CO₂ and water to bicarbonate and a proton?", "o": ["Carbonic anhydrase", "Catalase", "Cytochrome c oxidase", "Laccase"], "a": 0, "e": "Lecture 6 (Zinc in biotechnology): Zn²⁺ in carbonic anhydrase catalyses CO₂ + H₂O ⇌ HCO₃⁻ + H⁺."},
+{"id": 105, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "easy", "q": "What is the correct formula of aluminum sulfate?", "o": ["Al₂(SO₄)₃", "AlSO₄", "Al₃(SO₄)₂", "Al(SO₄)₃"], "a": 0, "e": "Lecture 7: 2 Al³⁺ (+6) balance 3 SO₄²⁻ (−6) → Al₂(SO₄)₃. Parentheses keep the polyatomic ion together."},
+{"id": 106, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "medium", "q": "What is the oxidation state of chlorine in hypochlorite (ClO⁻)?", "o": ["+1", "−1", "+3", "+7"], "a": 0, "e": "Lecture 7: x + (−2) = −1 → x = +1. Series: hypochlorite +1, chlorite +3, chlorate +5, perchlorate +7."},
+{"id": 107, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "medium", "q": "What is the oxidation state of nitrogen in nitrite (NO₂⁻)?", "o": ["+3", "+5", "−3", "+2"], "a": 0, "e": "Lecture 7: x + 2(−2) = −1 → x = +3. In nitrate (NO₃⁻) nitrogen is +5."},
+{"id": 108, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "medium", "q": "Which phosphate pair is most useful for buffering near neutral pH?", "o": ["H₂PO₄⁻ / HPO₄²⁻", "H₃PO₄ / PO₄³⁻", "HPO₄²⁻ / PO₄³⁻", "H₃PO₄ / H₂PO₄⁻"], "a": 0, "e": "Lecture 7: near neutral pH, dihydrogen phosphate and hydrogen phosphate are the main forms and work as the buffer pair."},
+{"id": 109, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "easy", "q": "Why must bleach (sodium hypochlorite) never be mixed with an acid?", "o": ["It can release toxic chlorine gas", "It turns into harmless table salt only", "It forms a protective oxide layer", "It immediately freezes"], "a": 0, "e": "Lecture 7: NaClO + 2HCl → NaCl + Cl₂ + H₂O — chlorine gas is hazardous to inhale. (Bleach + ammonia gives chloramine vapours.)"},
+{"id": 110, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "hard", "q": "How do aluminum salts help remove suspended particles in water treatment?", "o": ["Al³⁺ hydrolyses to a sticky Al(OH)₃ gel that traps fine particles and microbes", "Al³⁺ dissolves all particles into ions", "Aluminum releases chlorine that destroys the particles", "Aluminum raises the water's boiling point"], "a": 0, "e": "Lecture 7: Al³⁺ neutralises negative charges, then forms gelatinous Al(OH)₃ that acts like a net (coagulation)."},
+{"id": 111, "scope": "L7", "src": "lecture", "type": "essay", "tag": "Lecture 7 · New", "diff": "hard", "q": "Write the reactions of the phosphate buffer when (A) a small amount of acid and (B) a small amount of base is added.", "ans": ["A (acid added): HPO₄²⁻ + H⁺ → H₂PO₄⁻", "B (base added): H₂PO₄⁻ + OH⁻ → HPO₄²⁻ + H₂O"]}
+];
+
+/* =====================================================================
+   3) APP
+   ===================================================================== */
+const SCOPES = [
+  { key:'ALL', num:'∞', sym:'Σ',  label:'All Lectures',   sub:'Whole question bank',            c:'var(--cA)' },
+  { key:'L1',  num:'01', sym:'At', label:'Lecture 1',      sub:'Atomic structure & bonding',     c:'var(--c1)' },
+  { key:'L2',  num:'02', sym:'Tr', label:'Lecture 2',      sub:'Periodic trends & properties',   c:'var(--c2)' },
+  { key:'L4',  num:'04', sym:'Co', label:'Lecture 4',      sub:'Coordination chemistry',         c:'var(--c4)' },
+  { key:'L5',  num:'05', sym:'Mg', label:'Lecture 5',      sub:'Main-group chemistry',           c:'var(--c5)' },
+  { key:'L6',  num:'06', sym:'Tm', label:'Lecture 6',      sub:'Transition-metal chemistry',     c:'var(--c6)' },
+  { key:'L7',  num:'07', sym:'Ps', label:'Lecture 7',      sub:'Main-group II: polyatomic ions', c:'var(--c7)' }
+];
+const DIFFS = [ { key:'easy', label:'Easy' }, { key:'medium', label:'Medium' }, { key:'hard', label:'Hard' } ];
+const COUNTS = [10, 20, 30, 50];
+
+/* --- Arabic messages (gender-aware: G(male, female) picks the form; default = male/neutral) --- */
+const G = (m, f) => setup.gender === 'girl' ? f : m;
+const YA = (n) => n ? ' يا ' + n : '';
+const PRAISE = [
+  n => `تبارك الله${YA(n)} ${G('✨', '🌸')}`,
+  n => `ما شاء الله ${G('عليك', 'عليكي')}${YA(n)} ${G('🌟', '💖')}`,
+  n => `الله ينوّر${YA(n)} ${G('💡', '✨')}`,
+  n => `بارك الله ${G('فيك', 'فيكي')}${YA(n)} 🤍`,
+  n => `ربنا يزيدك علم${YA(n)} 📚`,
+  n => `اللهم بارك، إجابة في الجون${YA(n)} 🎯`,
+  n => G(`جامد${YA(n)}! كده صح 💪`, `شاطرة${YA(n)}! كده صح 🌷`),
+  n => G(`وحش${YA(n)} 🔥 ما شاء الله`, `برافو${YA(n)} 🎀 ما شاء الله`)
+];
+const NUDGE = [
+  n => `ولا يهمك${YA(n)}، المرة الجاية إن شاء الله ${G('💪', '🌸')}`,
+  n => `${G('قرّبت', 'قرّبتي')}${YA(n)}! ${G('بص', 'بصّي')} على الشرح تحت 👇`,
+  n => `عادي${YA(n)}، اللي بيتعلم بيغلط 🙂`,
+  n => `${G('ركّز', 'ركّزي')} معانا${YA(n)}، الشرح هيفكّها 🔍`
+];
+const STREAKS = {
+  3:  n => `3 ورا بعض 🔥 ${G('كمّل', 'كمّلي')}${YA(n)}!`,
+  5:  n => `5 ورا بعض! الله ينوّر ${G('🔥🔥', '💖💖')}`,
+  10: n => `شكلك مش ${G('بتهزر', 'بتهزري')}${YA(n)}، تبارك الله ${G('😎', '💅')}`,
+  15: n => `15 ورا بعض! ${G('إنت مذاكر ولا حافظ', 'إنتي مذاكرة ولا حافظة')} البنك؟ 😂`,
+  20: n => `20 ورا بعض… الدكتور لازم يعرف ${G('عنك', 'عنِك')} 👀`,
+  25: n => `25! حد ${G('يوقّفه ده', 'يوقّفها دي')} 😂${G('🔥', '✨')}`,
+  30: n => `لا، شكلك ${G('ناوي', 'ناوية')} على FULL MARK 🎯`,
+  40: n => `40!! ${G('ده إنت اللي المفروض تشرح', 'دي إنتي اللي المفروض تشرحي')} المحاضرة 😂`,
+  50: n => `50 ورا بعض… ما شاء الله، ربنا ${G('يحفظك', 'يحفظِك')} ${G('🏆', '👑')}`,
+  75: n => `75؟! ${G('إنت جاي تختبر', 'إنتي جاية تختبري')} البنك ولا البنك ${G('بيختبرك', 'بيختبرِك')}؟ 😂`,
+  100: n => `100 ورا بعض… تبارك الرحمن، ${G('أسطورة 👑', 'أسطورة 👑💖')}`
+};
+const ADHKAR = [
+  'صلِّ على خير الخلق ﷺ',
+  'اذكر الله 🤍 سبحان الله وبحمده، سبحان الله العظيم',
+  'اللهم صلِّ وسلم وبارك على سيدنا محمد ﷺ',
+  'لا حول ولا قوة إلا بالله',
+  'أستغفر الله العظيم وأتوب إليه',
+  'رَبِّ زِدْنِي عِلْمًا 📖',
+  'لا إله إلا أنت سبحانك إني كنت من الظالمين',
+  'سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر'
+];
+
+/* --- helpers --- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
+const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+const scopeOf = (k) => SCOPES.find(s => s.key === k) || SCOPES[0];
+const diffLabel = (k) => (DIFFS.find(d => d.key === k) || {}).label || k;
+const poolFor = (scope) => scope === 'ALL' ? QUESTIONS : QUESTIONS.filter(q => q.scope === scope);
+function showView(name) {
+  ['setup','exam','result','admin'].forEach(v => $('view-' + v).classList.toggle('hidden-view', v !== name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+let toastT = null;
+function toast(msg, ms = 2600) {
+  $('toastText').textContent = msg;
+  const t = $('toast'); t.classList.remove('opacity-0', 'translate-y-4');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('opacity-0', 'translate-y-4'), ms);
+}
+function confetti(n = 40) {
+  const set = setup.gender === 'girl' ? ['🌸','💖','✨','🎀','🦋','💗','🌷'] : setup.gender === 'boy' ? ['⚡','🔥','🏆','⭐','🚀','💪','🎯'] : ['🎉','✨','⭐','🧪','⚗️','🏆','💚'];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('div'); s.className = 'confetti'; s.textContent = pickOne(set);
+    s.style.left = Math.random() * 100 + 'vw'; s.style.animationDuration = (2.2 + Math.random() * 2.2) + 's';
+    s.style.animationDelay = (Math.random() * .8) + 's'; document.body.appendChild(s); setTimeout(() => s.remove(), 5500);
+  }
+}
+
+/* --- Firebase --- */
+const FB_ENABLED = !!FIREBASE_CONFIG.apiKey;
+let db = null, auth = null;
+if (FB_ENABLED) {
+  try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(() => {}); }
+  catch (e) { console.error('Firebase init failed', e); }
+}
+const LOCAL_KEY = 'inorg_demo_results', PENDING_KEY = 'inorg_pending';
+const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+function studentId() {
+  const make = () => 'Student-' + Array.from({ length: 4 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+  try { let id = localStorage.getItem('inorg_sid'); if (!id) { id = make(); localStorage.setItem('inorg_sid', id); } return id; } catch { return make(); }
+}
+const SID = studentId();
+
+/* =================== SETUP =================== */
+const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium' };
+try { setup.gender = localStorage.getItem('inorg_gender') || ''; } catch {}
+try { setup.name = localStorage.getItem('inorg_name') || ''; } catch {}
+$('studentName').value = setup.name;
+
+function renderSetup() {
+  const hi = setup.name ? `أهلاً يا ${setup.name} ${G('👋', '🌸')}`
+           : setup.gender === 'boy' ? 'أهلاً بيك يا بطل 👋' : setup.gender === 'girl' ? 'أهلاً بيكي يا بطلة 🌸' : 'Welcome to the lab 👋';
+  $('hello').textContent = hi;
+  $('hello').className = 'font-display text-3xl sm:text-4xl font-bold' + (hi.startsWith('Welcome') ? '' : ' ar text-right sm:text-left');
+  document.querySelectorAll('#genderChips .gchip').forEach(b => b.classList.toggle('on', b.dataset.gender === setup.gender));
+  $('scopeTiles').innerHTML = SCOPES.map(s => `
+    <button type="button" class="tile ${setup.scope === s.key ? 'on' : ''}" style="--c:${s.c}" data-scope="${s.key}">
+      <span class="num">${s.num}</span><span class="cnt">${poolFor(s.key).length} Q</span>
+      <div class="sym">${s.sym}</div><div class="font-semibold text-sm">${s.label}</div><div class="nm">${s.sub}</div>
+    </button>`).join('');
+  const max = poolFor(setup.scope).length;
+  $('countChips').innerHTML = COUNTS.map(c => `<button type="button" class="chip ${setup.count === c ? 'on' : ''}" data-count="${c}" ${c > max ? 'disabled' : ''}>${c}</button>`).join('')
+    + `<button type="button" class="chip ${setup.count === max ? 'on' : ''}" data-count="${max}">All ${max}</button>`;
+  $('customMax').textContent = `max ${max}`; $('customCount').max = max;
+  $('diffChips').innerHTML = DIFFS.map(d => {
+    const n = poolFor(setup.scope).filter(q => q.diff === d.key).length;
+    return `<button type="button" class="chip ${setup.diff === d.key ? 'on' : ''}" data-diff="${d.key}">${d.label} <span class="opacity-60">· ${n}</span></button>`;
+  }).join('');
+  const s = scopeOf(setup.scope);
+  $('summary').innerHTML = `<span class="font-mono">${setup.count}</span> questions · ${s.label}${s.key !== 'ALL' ? ' — ' + s.sub : ''} · ${setup.count >= max ? 'all levels' : diffLabel(setup.diff)}`;
+}
+$('studentName').addEventListener('input', () => {
+  setup.name = $('studentName').value.trim().replace(/\s+/g, ' ').slice(0, 30);
+  try { localStorage.setItem('inorg_name', setup.name); } catch {}
+  renderSetup();
+});
+/* ---- theme (gender) ---- */
+const DECOR = {
+  girl: { items: ['♡','✿','❀','✦','♡','✿','🎀','🌸','💗','✦','♡','❀','🦋','✿'], colors: ['#e39bb6','#b69ad8','#d16d7e','#e8b4c8','#c9a6e0'], op: [.18,.35] },
+  boy:  { items: ['⬡','⚡','▲','⬢','✦','⚡','⬡','▲','⬢','⚛'], colors: ['#3b82f6','#22d3ee','#22c55e','#60a5fa'], op: [.07,.16] }
+};
+function applyTheme() {
+  const g = setup.gender;
+  document.body.dataset.theme = g || 'default';
+  const d = $('decor'); d.innerHTML = '';
+  $('nameHint').textContent = G('✍️ اختياري — لو كتبت اسمك هنناديك بيه في رسايل الترحيب والفيدباك بعد كل سؤال وفي النتيجة النهائية.', '✍️ اختياري — لو كتبتي اسمك هنناديكي بيه في رسايل الترحيب والفيدباك بعد كل سؤال وفي النتيجة النهائية.');
+  $('selfPrompt').textContent = G('قارن إجابتك بالإجابة النموذجية… الجواب صح؟', 'قارني إجابتك بالإجابة النموذجية… الجواب صح؟');
+  const cfg = DECOR[g]; if (!cfg) return;
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('span');
+    s.textContent = pickOne(cfg.items);
+    s.style.left = (Math.random() * 96) + 'vw'; s.style.top = (Math.random() * 94) + 'vh';
+    s.style.fontSize = (16 + Math.random() * 30) + 'px'; s.style.color = pickOne(cfg.colors);
+    s.style.opacity = cfg.op[0] + Math.random() * (cfg.op[1] - cfg.op[0]);
+    s.style.animationDuration = (7 + Math.random() * 9) + 's'; s.style.animationDelay = (-Math.random() * 8) + 's';
+    d.appendChild(s);
+  }
+}
+document.addEventListener('click', (e) => {
+  const gb = e.target.closest('[data-gender]');
+  if (gb) { setup.gender = gb.dataset.gender; try { localStorage.setItem('inorg_gender', setup.gender); } catch {} applyTheme(); renderSetup(); return; }
+  const s = e.target.closest('[data-scope]'), c = e.target.closest('[data-count]'), d = e.target.closest('[data-diff]');
+  if (s) { setup.scope = s.dataset.scope; const max = poolFor(setup.scope).length; if (setup.count > max) setup.count = Math.min(10, max); $('customCount').value = ''; renderSetup(); }
+  if (c && !c.disabled) { setup.count = +c.dataset.count; $('customCount').value = ''; $('countErr').classList.add('hidden'); renderSetup(); }
+  if (d) { setup.diff = d.dataset.diff; renderSetup(); }
+});
+$('customCount').addEventListener('input', () => {
+  const v = parseInt($('customCount').value, 10), max = poolFor(setup.scope).length;
+  if (Number.isInteger(v) && v >= 1 && v <= max) { setup.count = v; $('countErr').classList.add('hidden'); renderSetup(); }
+});
+$('startBtn').onclick = () => {
+  const max = poolFor(setup.scope).length;
+  if ($('customCount').value !== '') {
+    const v = Number($('customCount').value);
+    if (!Number.isInteger(v) || v < 1 || v > max) { $('countErr').textContent = `Please enter a whole number between 1 and ${max}.`; $('countErr').classList.remove('hidden'); return; }
+    setup.count = v;
+  }
+  startExam();
+};
+
+/* =================== QUESTION SELECTION =================== */
+function prepareQs(list) {
+  return shuffle(list).map(q => {
+    if (q.type !== 'mcq') return { ...q };
+    const fixed = q.o.some(t => /all (of )?(the|these)|none of|above/i.test(t));
+    const idx = fixed ? q.o.map((_, i) => i) : shuffle(q.o.map((_, i) => i));
+    return { ...q, opts: idx.map(i => q.o[i]), ans: idx.indexOf(q.a) };
+  });
+}
+function buildExam(scope, count, diff) {
+  const pool = poolFor(scope);
+  if (count >= pool.length) return prepareQs(pool);           // whole bank / whole lecture
+  const order = { easy: ['easy','medium','hard'], medium: ['medium','easy','hard'], hard: ['hard','medium','easy'] }[diff];
+  const rank = (q) => order.indexOf(q.diff);
+  const pick = (list, n) => { const seen = new Set(), out = [];
+    for (const q of shuffle(list).sort((a, b) => rank(a) - rank(b))) { if (out.length >= n) break; if (q.g && seen.has(q.g)) continue; if (q.g) seen.add(q.g); out.push(q); }
+    return out; };
+  const bank = pool.filter(q => q.src === 'bank'), lec = pool.filter(q => q.src === 'lecture');
+  let nLec = Math.min(lec.length, Math.max(count >= 7 ? 1 : 0, Math.round(count * LECTURE_SHARE)));
+  let nBank = Math.min(bank.length, count - nLec);
+  nLec = Math.min(lec.length, count - nBank);
+  return prepareQs([...pick(bank, nBank), ...pick(lec, nLec)]);
+}
+
+/* =================== EXAM =================== */
+let exam = null, timerInt = null;
+function startExam(retryQs) {
+  const isRetry = Array.isArray(retryQs);
+  exam = { qs: isRetry ? prepareQs(retryQs) : buildExam(setup.scope, setup.count, setup.diff), isRetry,
+           i: 0, score: 0, answers: [], start: Date.now(), selected: null, done: false, streak: 0, best: 0, saved: false };
+  $('qTotal').textContent = exam.qs.length; $('liveScore').textContent = '0'; $('streak').textContent = '0';
+  clearInterval(timerInt);
+  timerInt = setInterval(() => { $('timer').textContent = fmtTime(Math.floor((Date.now() - exam.start) / 1000)); }, 1000);
+  $('timer').textContent = '00:00';
+  showView('exam'); renderQuestion();
+  const n = setup.name;
+  toast(isRetry ? `يلا نصلّح اللي فات${YA(n)} ${G('💪', '🌸')}` : `بسم الله، بالتوفيق${YA(n)} ${G('🤍', '💖')}`);
+}
+
+function renderQuestion() {
+  const q = exam.qs[exam.i];
+  exam.selected = null; exam.done = false;
+  $('qNum').textContent = exam.i + 1;
+  $('progressBar').style.width = `${(exam.i / exam.qs.length) * 100}%`;
+  // reminder after every 5 questions
+  if (exam.i > 0 && exam.i % 5 === 0) { $('reminderText').textContent = pickOne(ADHKAR); $('reminder').classList.remove('hidden'); }
+  else $('reminder').classList.add('hidden');
+  const s = scopeOf(q.scope);
+  $('qTags').innerHTML = `
+    <span class="tag" style="color:${q.src === 'bank' ? 'var(--bankTag)' : 'var(--lecTag)'};border-color:${q.src === 'bank' ? 'var(--bankTag)' : 'var(--lecTag)'}">${q.src === 'bank' ? '📘' : '🧪'} ${esc(q.tag)}</span>
+    <span class="tag" style="color:${s.c}">${esc(s.label)}</span>
+    <span class="tag">${diffLabel(q.diff)}</span>
+    ${q.type === 'essay' ? '<span class="tag" style="color:var(--amber);border-color:var(--amber)">✍️ Short answer</span>' : ''}`;
+  $('qText').textContent = q.q;
+  $('feedback').className = 'hidden mt-5 rounded-xl p-4 text-sm leading-relaxed';
+  $('nextBtn').classList.add('hidden');
+  if (q.type === 'essay') {
+    $('qOptions').innerHTML = ''; $('qOptions').classList.add('hidden');
+    $('essayBox').classList.remove('hidden'); $('essayInput').value = ''; $('essayInput').disabled = false;
+    $('modelBox').classList.add('hidden'); $('selfMark').classList.add('hidden');
+    $('modelList').innerHTML = q.ans.map(l => `<li>• ${esc(l)}</li>`).join('');
+    $('submitBtn').classList.add('hidden'); $('revealBtn').classList.remove('hidden');
+  } else {
+    $('essayBox').classList.add('hidden'); $('revealBtn').classList.add('hidden'); $('qOptions').classList.remove('hidden');
+    $('qOptions').innerHTML = q.opts.map((o, i) => `<button type="button" class="opt" data-opt="${i}"><span class="k">${String.fromCharCode(65 + i)}</span><span class="pt-0.5">${esc(o)}</span></button>`).join('');
+    $('submitBtn').classList.remove('hidden'); $('submitBtn').disabled = true;
+  }
+  const card = $('qCard'); card.classList.remove('fade'); void card.offsetWidth; card.classList.add('fade');
+}
+$('reminderX').onclick = () => $('reminder').classList.add('hidden');
+
+$('qOptions').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-opt]'); if (!b || exam.done) return;
+  exam.selected = +b.dataset.opt;
+  document.querySelectorAll('#qOptions .opt').forEach(el => el.classList.toggle('sel', el === b));
+  $('submitBtn').disabled = false;
+});
+
+function record(ok, extra) {
+  const q = exam.qs[exam.i];
+  exam.done = true;
+  const prev = exam.streak;
+  if (ok) { exam.score++; exam.streak++; exam.best = Math.max(exam.best, exam.streak); }
+  else exam.streak = 0;
+  exam.answers.push({ q, ok, ...extra });
+  $('liveScore').textContent = exam.score; $('streak').textContent = exam.streak;
+  const n = setup.name;
+  if (ok && STREAKS[exam.streak]) toast(STREAKS[exam.streak](n), 3200);
+  else if (ok && exam.streak > 100 && exam.streak % 25 === 0) toast(`${exam.streak} ورا بعض… تبارك الله 😳`, 3200);
+  else if (!ok && prev >= 5) toast(G(`الحصان بيكبو${YA(n)} 😅 يلا عدّاد جديد`, `الفرس بتكبو${YA(n)} 😅 يلا عدّاد جديد 🌸`), 3000);
+  $('progressBar').style.width = `${((exam.i + 1) / exam.qs.length) * 100}%`;
+  $('nextBtn').textContent = exam.i === exam.qs.length - 1 ? 'Finish & see results →' : 'Next →';
+  $('nextBtn').classList.remove('hidden'); $('nextBtn').focus();
+}
+function feedbackBox(ok, bodyHtml) {
+  const n = setup.name, fb = $('feedback');
+  fb.className = 'mt-5 rounded-xl p-4 text-sm leading-relaxed fade';
+  fb.style.background = ok ? 'var(--okBg)' : 'var(--badBg)';
+  fb.style.border = `1px solid ${ok ? 'var(--okLine)' : 'var(--badLine)'}`;
+  fb.innerHTML = `<div class="ar text-lg font-bold mb-2" style="color:${ok ? 'var(--okText)' : 'var(--badText)'}">${esc(pickOne(ok ? PRAISE : NUDGE)(n))}</div>${bodyHtml}`;
+}
+$('submitBtn').onclick = () => {
+  if (exam.selected === null || exam.done) return;
+  const q = exam.qs[exam.i], ok = exam.selected === q.ans;
+  document.querySelectorAll('#qOptions .opt').forEach((el, i) => {
+    el.disabled = true; el.classList.remove('sel');
+    if (i === q.ans) el.classList.add('ok'); else if (i === exam.selected) el.classList.add('bad');
+  });
+  feedbackBox(ok, `${ok ? '' : `<div class="font-semibold mb-1">Correct answer: (${String.fromCharCode(65 + q.ans)}) ${esc(q.opts[q.ans])}</div>`}<div style="color:var(--soft)">${esc(q.e)}</div>`);
+  $('submitBtn').classList.add('hidden');
+  record(ok, { chosen: exam.selected });
+};
+$('revealBtn').onclick = () => {
+  $('modelBox').classList.remove('hidden'); $('selfMark').classList.remove('hidden');
+  $('revealBtn').classList.add('hidden'); $('essayInput').disabled = true;
+};
+function selfMark(ok) {
+  if (exam.done) return;
+  $('selfMark').classList.add('hidden');
+  feedbackBox(ok, ok ? '<div style="color:var(--soft)">Counted as correct. Keep the model answer in mind for the exam.</div>'
+                     : '<div style="color:var(--soft)">No problem — read the model answer above once more; it will come back in the retry round.</div>');
+  record(ok, { written: $('essayInput').value.trim() });
+}
+$('markRight').onclick = () => selfMark(true);
+$('markWrong').onclick = () => selfMark(false);
+$('nextBtn').onclick = () => { if (exam.i < exam.qs.length - 1) { exam.i++; renderQuestion(); } else finishExam(); };
+
+/* =================== RESULT =================== */
+function finishExam() {
+  clearInterval(timerInt);
+  const total = exam.qs.length, pct = Math.round((exam.score / total) * 1000) / 10;
+  const dur = Math.floor((Date.now() - exam.start) / 1000), n = setup.name, s = scopeOf(setup.scope);
+  const fullBank = !exam.isRetry && setup.scope === 'ALL' && total === QUESTIONS.length && exam.score === total;
+  let msg;
+  if (fullBank) msg = `ما شاء الله، تبارك الرحمن ${G('عليك', 'عليكي')} ${G('جبت', 'جبتي')} البنك في شوال 👏`;
+  else if (pct === 100) msg = `فُل مارك${YA(n)}! ما شاء الله تبارك الله ${G('🎉', '💖')}`;
+  else if (pct >= 85) msg = `ما شاء الله ${G('عليك', 'عليكي')}${YA(n)}، مستوى عالي ${G('🌟', '🌸')}`;
+  else if (pct >= 70) msg = `حلو أوي${YA(n)}، شوية مراجعة ${G('وتبقى', 'وتبقي')} فُل ${G('💪', '✨')}`;
+  else if (pct >= 50) msg = `${G('عدّيت', 'عدّيتي')}${YA(n)}، بس لسه محتاجين نراجع شوية 📖`;
+  else msg = `ولا يهمك${YA(n)}، ${G('ارجع', 'ارجعي')} للمحاضرات ${G('وحِل', 'وحِلّي')} الغلط تاني وإن شاء الله ${G('تكسّرها', 'تكسّريها')} 🤍`;
+  if (exam.isRetry) msg = (exam.score === total ? `${G('صلّحت', 'صلّحتي')} كل الغلط، تبارك الله ✅` : `فاضل ${total - exam.score} — ${G('حاول', 'حاولي')} تاني ${G('💪', '🌸')}`);
+  $('resLabel').textContent = exam.isRetry ? 'Retry round — your score' : (n ? `${n}'s score` : 'Your score');
+  $('resPct').textContent = pct + '%';
+  $('resPct').style.color = pct >= 75 ? 'var(--acc)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
+  $('resScore').textContent = `${exam.score} / ${total} correct`;
+  $('resMsg').textContent = msg;
+  $('resScope').textContent = s.label + (s.key !== 'ALL' ? ' · ' + s.sub : '');
+  $('resDiff').textContent = total >= poolFor(setup.scope).length && !exam.isRetry ? 'All levels' : diffLabel(setup.diff);
+  $('resTime').textContent = fmtTime(dur);
+  $('resStreak').textContent = exam.best + ' 🔥';
+  $('reviewList').classList.add('hidden'); $('reviewToggle').textContent = 'Review answers';
+  $('reviewList').innerHTML = exam.answers.map((a, i) => `
+    <div class="panel p-5" style="border-left:4px solid ${a.ok ? 'var(--okLine)' : 'var(--badLine)'}">
+      <div class="flex flex-wrap gap-2 mb-2"><span class="tag">Q${i + 1}</span><span class="tag">${esc(a.q.tag)}</span></div>
+      <div class="font-semibold mb-2">${esc(a.q.q)}</div>
+      ${a.q.type === 'essay'
+        ? `${a.written ? `<div class="text-sm muted mb-1">Your answer: ${esc(a.written)}</div>` : ''}<div class="text-sm" style="color:var(--okText)">Model answer: ${a.q.ans.map(esc).join(' · ')}</div>`
+        : `<div class="text-sm">${a.ok ? '' : `<div style="color:var(--badText)">Your answer: ${esc(a.q.opts[a.chosen])}</div>`}<div style="color:var(--okText)">Correct: ${esc(a.q.opts[a.q.ans])}</div></div><div class="text-sm muted mt-2">${esc(a.q.e)}</div>`}
+    </div>`).join('');
+  const wrong = exam.answers.filter(a => !a.ok).map(a => QUESTIONS.find(x => x.id === a.q.id));
+  exam.wrong = wrong;
+  $('retryWrongBtn').classList.toggle('hidden', wrong.length === 0);
+  $('retryWrongBtn').textContent = `↻ Retry the ${wrong.length} I got wrong`;
+  showView('result');
+  if (pct === 100) confetti(fullBank ? 90 : 45);
+  if (!exam.isRetry) saveResult({ studentName: (n ? `${n} · ${SID}` : SID).slice(0, 60), scope: setup.scope, scopeLabel: s.label,
+    difficulty: setup.diff, score: exam.score, total, percentage: pct, durationSec: dur });
+}
+$('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
+$('reviewToggle').onclick = () => { const h = $('reviewList').classList.toggle('hidden'); $('reviewToggle').textContent = h ? 'Review answers' : 'Hide review'; };
+$('restartBtn').onclick = () => { showView('setup'); renderSetup(); };
+
+/* --- silent save with retries + offline queue --- */
+async function sendOne(rec) {
+  if (FB_ENABLED && db) await db.collection(COLLECTION).add({ ...rec, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+  else { const arr = lsGet(LOCAL_KEY); arr.push({ ...rec, id: 'local-' + Date.now(), timestamp: rec.clientTime }); lsSet(LOCAL_KEY, arr); }
+}
+async function saveResult(r) {
+  const rec = { ...r, clientTime: new Date().toISOString() };
+  for (let t = 0; t < 4; t++) {
+    try { await sendOne(rec); exam.saved = true; return; }
+    catch (err) { console.warn('save attempt failed', err); await new Promise(res => setTimeout(res, 1500 * (t + 1))); }
+  }
+  const p = lsGet(PENDING_KEY); p.push(rec); lsSet(PENDING_KEY, p);
+}
+async function flushPending() {
+  const p = lsGet(PENDING_KEY); if (!p.length) return;
+  const left = []; for (const rec of p) { try { await sendOne(rec); } catch { left.push(rec); } } lsSet(PENDING_KEY, left);
+}
+
+/* =================== ADMIN =================== */
+let adminUnsub = null, adminRows = [], adminUnlocked = false;
+async function sha256(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+let logoTaps = [];
+$('logo').addEventListener('click', () => {
+  const now = Date.now(); logoTaps = logoTaps.filter(t => now - t < 3000); logoTaps.push(now);
+  if (logoTaps.length >= 5) { logoTaps = []; openCodeBox(); }
+});
+function openCodeBox() { if (adminUnlocked) { openAdmin(); return; } $('codeInput').value = ''; $('codeErr').classList.add('hidden'); $('codeBox').classList.remove('hidden'); setTimeout(() => $('codeInput').focus(), 50); }
+const closeCodeBox = () => $('codeBox').classList.add('hidden');
+$('codeBox').addEventListener('click', e => { if (e.target === $('codeBox')) closeCodeBox(); });
+$('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('codeGo').click(); if (e.key === 'Escape') closeCodeBox(); });
+$('codeGo').onclick = async () => {
+  const pass = $('codeInput').value.trim(); $('codeGo').disabled = true;
+  try {
+    if (!pass || (await sha256(pass)) !== PASS_HASH) throw new Error('bad');
+    if (FB_ENABLED && auth) await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pass);
+    adminUnlocked = true; closeCodeBox(); clearInterval(timerInt); openAdmin();
+  } catch (e) { if (e.message !== 'bad') console.error(e); $('codeErr').classList.remove('hidden'); }
+  finally { $('codeGo').disabled = false; }
+};
+if (location.hash === '#admin') { history.replaceState(null, '', location.pathname + location.search); setTimeout(openCodeBox, 300); }
+
+function openAdmin() {
+  showView('admin');
+  $('adminMode').textContent = FB_ENABLED && db ? 'Connected to Firebase — results appear in real time.' : 'Demo mode — showing results stored in this browser only.';
+  if (adminUnsub) return;
+  if (FB_ENABLED && db) {
+    adminUnsub = db.collection(COLLECTION).orderBy('timestamp', 'desc').onSnapshot(snap => {
+      adminRows = snap.docs.map(d => { const x = d.data(); return { ...x, ts: x.timestamp?.toDate ? x.timestamp.toDate() : new Date(x.clientTime || Date.now()) }; });
+      renderAdmin();
+    }, err => { $('adminMode').textContent = 'Permission denied or connection error: ' + (err.code || err.message); });
+  } else {
+    const load = () => { adminRows = lsGet(LOCAL_KEY).map(x => ({ ...x, ts: new Date(x.timestamp) })).sort((a, b) => b.ts - a.ts); renderAdmin(); };
+    load(); const on = e => { if (e.key === LOCAL_KEY) load(); }; window.addEventListener('storage', on); adminUnsub = () => window.removeEventListener('storage', on);
+  }
+}
+function renderAdmin() {
+  const term = $('adminSearch').value.trim().toLowerCase();
+  const rows = adminRows.filter(r => !term || String(r.studentName).toLowerCase().includes(term));
+  const ids = new Set(adminRows.map(r => { const s = String(r.studentName); const m = s.match(/Student-[A-Z0-9]{4}/); return m ? m[0] : s.toLowerCase(); }));
+  $('stTakers').textContent = ids.size; $('stAttempts').textContent = adminRows.length;
+  $('stAvg').textContent = adminRows.length ? (adminRows.reduce((a, r) => a + (+r.percentage || 0), 0) / adminRows.length).toFixed(1) + '%' : '–';
+  $('stPass').textContent = adminRows.length ? Math.round(adminRows.filter(r => r.percentage >= 50).length / adminRows.length * 100) + '%' : '–';
+  $('adminEmpty').classList.toggle('hidden', rows.length > 0);
+  $('adminRows').innerHTML = rows.map((r, i) => { const p = +r.percentage || 0;
+    return `<tr class="border-t">
+      <td class="px-4 py-3 muted font-mono">${i + 1}</td><td class="px-4 py-3 font-semibold">${esc(r.studentName)}</td>
+      <td class="px-4 py-3 muted whitespace-nowrap">${esc(r.ts.toLocaleString())}</td><td class="px-4 py-3">${esc(r.scopeLabel || r.scope)}</td>
+      <td class="px-4 py-3">${esc(diffLabel(r.difficulty))}</td><td class="px-4 py-3 text-right font-mono">${esc(r.score)}/${esc(r.total)}</td>
+      <td class="px-4 py-3 text-right font-mono" style="color:${p >= 75 ? 'var(--acc)' : p >= 50 ? 'var(--amber)' : 'var(--rose)'}">${p}%</td></tr>`; }).join('');
+}
+$('adminSearch').addEventListener('input', renderAdmin);
+$('exportCsv').onclick = () => {
+  const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
+  const lines = [['Student','Date','Lecture','Difficulty','Score','Total','Percentage','Duration (s)'].map(cell).join(',')]
+    .concat(adminRows.map(r => [r.studentName, r.ts.toISOString(), r.scopeLabel || r.scope, diffLabel(r.difficulty), r.score, r.total, r.percentage, r.durationSec].map(cell).join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = `inorganic_results_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('adminLogout').onclick = async () => {
+  if (typeof adminUnsub === 'function') adminUnsub(); adminUnsub = null; adminRows = []; adminUnlocked = false; $('adminRows').innerHTML = '';
+  if (FB_ENABLED && auth) { try { await auth.signOut(); } catch {} }
+  showView('setup'); renderSetup();
+};
+
+/* boot */
+applyTheme();
+renderSetup();
+flushPending();
+</script>
+</body>
+</html>
