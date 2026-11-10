@@ -168,9 +168,25 @@
       <div id="scopeTiles" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
     </div>
 
+    <!-- source -->
+    <div>
+      <div class="label mb-3">03 · Question source</div>
+      <div class="grid sm:grid-cols-2 gap-3" id="sourceChoices">
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-source="mix">
+          <div class="font-semibold">📘 + 🧪 Bank + lecture questions</div>
+          <div class="nm mt-1">85–90% from the question bank, the rest new questions from lecture details</div>
+        </button>
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-source="bank">
+          <div class="font-semibold">📘 Question bank only</div>
+          <div class="nm mt-1">Every question comes from the official bank</div>
+        </button>
+      </div>
+      <p class="text-xs muted mt-2">Short-answer questions always come from the bank.</p>
+    </div>
+
     <!-- count -->
     <div>
-      <div class="label mb-3">03 · Number of questions</div>
+      <div class="label mb-3">04 · Number of questions</div>
       <div class="flex flex-wrap gap-2 items-center" id="countChips"></div>
       <div class="flex items-center gap-3 mt-3">
         <input id="customCount" type="number" inputmode="numeric" min="1" step="1" placeholder="Type a number" class="w-40 px-3 py-2">
@@ -181,7 +197,7 @@
 
     <!-- difficulty -->
     <div>
-      <div class="label mb-3">04 · Difficulty</div>
+      <div class="label mb-3">05 · Difficulty</div>
       <div class="flex flex-wrap gap-2" id="diffChips"></div>
       <p class="text-xs muted mt-2">If a level runs short for the chosen lecture, the exam is topped up from the nearest level.</p>
     </div>
@@ -343,7 +359,7 @@ const FIREBASE_CONFIG = {
 const ADMIN_EMAIL = "admin@bioc209.app";
 const COLLECTION  = "inorganic_results";
 const PASS_HASH   = "c65fee33c7c6897d28bbb7128cbc38f79f56f8d2c71f98cb3c9a26e8ca0618cf"; // SHA-256 of the code
-const LECTURE_SHARE = 0.14;   // ~14% new lecture-based questions per exam
+const LECTURE_SHARE = 0.12;   // ~12% new lecture-based questions per exam (≈88% bank) in 'mix' mode
 
 /* =====================================================================
    2) QUESTION DATA
@@ -462,8 +478,7 @@ const QUESTIONS = [
 {"id": 107, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "medium", "q": "What is the oxidation state of nitrogen in nitrite (NO₂⁻)?", "o": ["+3", "+5", "−3", "+2"], "a": 0, "e": "Lecture 7: x + 2(−2) = −1 → x = +3. In nitrate (NO₃⁻) nitrogen is +5."},
 {"id": 108, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "medium", "q": "Which phosphate pair is most useful for buffering near neutral pH?", "o": ["H₂PO₄⁻ / HPO₄²⁻", "H₃PO₄ / PO₄³⁻", "HPO₄²⁻ / PO₄³⁻", "H₃PO₄ / H₂PO₄⁻"], "a": 0, "e": "Lecture 7: near neutral pH, dihydrogen phosphate and hydrogen phosphate are the main forms and work as the buffer pair."},
 {"id": 109, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "easy", "q": "Why must bleach (sodium hypochlorite) never be mixed with an acid?", "o": ["It can release toxic chlorine gas", "It turns into harmless table salt only", "It forms a protective oxide layer", "It immediately freezes"], "a": 0, "e": "Lecture 7: NaClO + 2HCl → NaCl + Cl₂ + H₂O — chlorine gas is hazardous to inhale. (Bleach + ammonia gives chloramine vapours.)"},
-{"id": 110, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "hard", "q": "How do aluminum salts help remove suspended particles in water treatment?", "o": ["Al³⁺ hydrolyses to a sticky Al(OH)₃ gel that traps fine particles and microbes", "Al³⁺ dissolves all particles into ions", "Aluminum releases chlorine that destroys the particles", "Aluminum raises the water's boiling point"], "a": 0, "e": "Lecture 7: Al³⁺ neutralises negative charges, then forms gelatinous Al(OH)₃ that acts like a net (coagulation)."},
-{"id": 111, "scope": "L7", "src": "lecture", "type": "essay", "tag": "Lecture 7 · New", "diff": "hard", "q": "Write the reactions of the phosphate buffer when (A) a small amount of acid and (B) a small amount of base is added.", "ans": ["A (acid added): HPO₄²⁻ + H⁺ → H₂PO₄⁻", "B (base added): H₂PO₄⁻ + OH⁻ → HPO₄²⁻ + H₂O"]}
+{"id": 110, "scope": "L7", "src": "lecture", "type": "mcq", "tag": "Lecture 7 · New", "diff": "hard", "q": "How do aluminum salts help remove suspended particles in water treatment?", "o": ["Al³⁺ hydrolyses to a sticky Al(OH)₃ gel that traps fine particles and microbes", "Al³⁺ dissolves all particles into ions", "Aluminum releases chlorine that destroys the particles", "Aluminum raises the water's boiling point"], "a": 0, "e": "Lecture 7: Al³⁺ neutralises negative charges, then forms gelatinous Al(OH)₃ that acts like a net (coagulation)."}
 ];
 
 /* =====================================================================
@@ -532,7 +547,7 @@ const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
 const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
 const scopeOf = (k) => SCOPES.find(s => s.key === k) || SCOPES[0];
 const diffLabel = (k) => (DIFFS.find(d => d.key === k) || {}).label || k;
-const poolFor = (scope) => scope === 'ALL' ? QUESTIONS : QUESTIONS.filter(q => q.scope === scope);
+const poolFor = (scope) => QUESTIONS.filter(q => (scope === 'ALL' || q.scope === scope) && (setup.source !== 'bank' || q.src === 'bank'));
 function showView(name) {
   ['setup','exam','result','admin'].forEach(v => $('view-' + v).classList.toggle('hidden-view', v !== name));
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -570,7 +585,8 @@ function studentId() {
 const SID = studentId();
 
 /* =================== SETUP =================== */
-const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium' };
+const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium', source: 'mix' };
+try { setup.source = localStorage.getItem('inorg_source') === 'bank' ? 'bank' : 'mix'; } catch {}
 try { setup.gender = localStorage.getItem('inorg_gender') || ''; } catch {}
 try { setup.name = localStorage.getItem('inorg_name') || ''; } catch {}
 $('studentName').value = setup.name;
@@ -582,7 +598,7 @@ function renderSetup() {
   $('hello').className = 'font-display text-3xl sm:text-4xl font-bold' + (hi.startsWith('Welcome') ? '' : ' ar text-right sm:text-left');
   document.querySelectorAll('#genderChips .gchip').forEach(b => b.classList.toggle('on', b.dataset.gender === setup.gender));
   $('scopeTiles').innerHTML = SCOPES.map(s => `
-    <button type="button" class="tile ${setup.scope === s.key ? 'on' : ''}" style="--c:${s.c}" data-scope="${s.key}">
+    <button type="button" class="tile ${setup.scope === s.key ? 'on' : ''}" style="--c:${s.c};${poolFor(s.key).length ? '' : 'opacity:.35;cursor:not-allowed'}" data-scope="${s.key}" ${poolFor(s.key).length ? '' : 'disabled title="No bank questions for this lecture"'}>
       <span class="num">${s.num}</span><span class="cnt">${poolFor(s.key).length} Q</span>
       <div class="sym">${s.sym}</div><div class="font-semibold text-sm">${s.label}</div><div class="nm">${s.sub}</div>
     </button>`).join('');
@@ -595,7 +611,8 @@ function renderSetup() {
     return `<button type="button" class="chip ${setup.diff === d.key ? 'on' : ''}" data-diff="${d.key}">${d.label} <span class="opacity-60">· ${n}</span></button>`;
   }).join('');
   const s = scopeOf(setup.scope);
-  $('summary').innerHTML = `<span class="font-mono">${setup.count}</span> questions · ${s.label}${s.key !== 'ALL' ? ' — ' + s.sub : ''} · ${setup.count >= max ? 'all levels' : diffLabel(setup.diff)}`;
+  document.querySelectorAll('#sourceChoices [data-source]').forEach(b => b.classList.toggle('on', b.dataset.source === setup.source));
+  $('summary').innerHTML = `${setup.source === 'bank' ? '📘 Bank only · ' : ''}<span class="font-mono">${setup.count}</span> questions · ${s.label}${s.key !== 'ALL' ? ' — ' + s.sub : ''} · ${setup.count >= max ? 'all levels' : diffLabel(setup.diff)}`;
 }
 $('studentName').addEventListener('input', () => {
   setup.name = $('studentName').value.trim().replace(/\s+/g, ' ').slice(0, 30);
@@ -627,7 +644,13 @@ function applyTheme() {
 document.addEventListener('click', (e) => {
   const gb = e.target.closest('[data-gender]');
   if (gb) { setup.gender = gb.dataset.gender; try { localStorage.setItem('inorg_gender', setup.gender); } catch {} applyTheme(); renderSetup(); return; }
-  const s = e.target.closest('[data-scope]'), c = e.target.closest('[data-count]'), d = e.target.closest('[data-diff]');
+  const src = e.target.closest('[data-source]');
+  if (src) { setup.source = src.dataset.source; try { localStorage.setItem('inorg_source', setup.source); } catch {}
+    if (!poolFor(setup.scope).length) { setup.scope = 'ALL'; setup.count = 10; }
+    const mx = poolFor(setup.scope).length; if (setup.count > mx) setup.count = Math.min(10, mx);
+    $('customCount').value = ''; renderSetup(); return; }
+  const s0 = e.target.closest('[data-scope]'); if (s0 && s0.disabled) return;
+  const s = s0, c = e.target.closest('[data-count]'), d = e.target.closest('[data-diff]');
   if (s) { setup.scope = s.dataset.scope; const max = poolFor(setup.scope).length; if (setup.count > max) setup.count = Math.min(10, max); $('customCount').value = ''; renderSetup(); }
   if (c && !c.disabled) { setup.count = +c.dataset.count; $('customCount').value = ''; $('countErr').classList.add('hidden'); renderSetup(); }
   if (d) { setup.diff = d.dataset.diff; renderSetup(); }
@@ -778,7 +801,7 @@ function finishExam() {
   clearInterval(timerInt);
   const total = exam.qs.length, pct = Math.round((exam.score / total) * 1000) / 10;
   const dur = Math.floor((Date.now() - exam.start) / 1000), n = setup.name, s = scopeOf(setup.scope);
-  const fullBank = !exam.isRetry && setup.scope === 'ALL' && total === QUESTIONS.length && exam.score === total;
+  const fullBank = !exam.isRetry && setup.scope === 'ALL' && total === poolFor('ALL').length && exam.score === total;
   let msg;
   if (fullBank) msg = `ما شاء الله، تبارك الرحمن ${G('عليك', 'عليكي')} ${G('جبت', 'جبتي')} البنك في شوال 👏`;
   else if (pct === 100) msg = `فُل مارك${YA(n)}! ما شاء الله تبارك الله ${G('🎉', '💖')}`;
@@ -811,7 +834,7 @@ function finishExam() {
   $('retryWrongBtn').textContent = `↻ Retry the ${wrong.length} I got wrong`;
   showView('result');
   if (pct === 100) confetti(fullBank ? 90 : 45);
-  if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.scope, scopeLabel: s.label,
+  if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.scope, scopeLabel: s.label + (setup.source === 'bank' ? ' (bank only)' : ''),
     difficulty: setup.diff, score: exam.score, total, percentage: pct, durationSec: dur });
 }
 $('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
