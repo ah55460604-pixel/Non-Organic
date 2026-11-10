@@ -17,15 +17,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   /* ===== THEMES: default (lab) · boy · girl — switched live via <body data-theme> ===== */
-  body {
-    --bg:#0b0f1a; --panel:#121829; --panel2:#182036; --line:#263049; --text:#e8ecf5; --muted:#8b95b0;
-    --acc:#4de1c1; --accInk:#062a22; --amber:#ffb547; --amberInk:#2b1a00; --rose:#ff6b81; --violet:#a78bfa;
-    --accSoft:rgba(77,225,193,.08); --accLine:rgba(77,225,193,.35); --ring:rgba(77,225,193,.18);
-    --okBg:rgba(52,211,153,.12); --okLine:#34d399; --okText:#6ee7b7; --badBg:rgba(255,107,129,.09); --badLine:rgba(255,107,129,.6); --badText:#fda4af;
-    --soft:#cfd6e6; --inputBg:#0e1424; --ph:#5d6784; --header:rgba(11,15,26,.82); --overlay:rgba(5,8,15,.7);
-    --dis:#2a344e; --disInk:#66708b; --grid:rgba(255,255,255,.025); --glow1:rgba(77,225,193,.10); --glow2:rgba(167,139,250,.10);
-    --remBg:linear-gradient(90deg,rgba(77,225,193,.12),rgba(167,139,250,.12)); --bankTag:#93c5fd; --lecTag:#c4b5fd; --r:18px;
-    --cA:#e8ecf5; --c1:#ff6b81; --c2:#ffb547; --c4:#4de1c1; --c5:#a3e635; --c6:#60a5fa; --c7:#a78bfa;
+  body {   /* default (no gender chosen): neutral gray */
+    --bg:#1e1f22; --panel:#26272b; --panel2:#2d2e33; --line:#3d3e44; --text:#ececee; --muted:#9a9ba1;
+    --acc:#c9cace; --accInk:#1e1f22; --amber:#a8a9ae; --amberInk:#1e1f22; --rose:#d98a8a; --violet:#8e8f95;
+    --accSoft:rgba(255,255,255,.06); --accLine:rgba(255,255,255,.25); --ring:rgba(255,255,255,.15);
+    --okBg:rgba(127,191,152,.10); --okLine:#7fbf98; --okText:#a7d7b8; --badBg:rgba(217,138,138,.09); --badLine:rgba(217,138,138,.6); --badText:#e5a9a9;
+    --soft:#c9cace; --inputBg:#1a1b1e; --ph:#6b6c72; --header:rgba(30,31,34,.86); --overlay:rgba(0,0,0,.6);
+    --dis:#3d3e44; --disInk:#77787e; --grid:rgba(255,255,255,.03); --glow1:rgba(255,255,255,.05); --glow2:rgba(255,255,255,.035);
+    --remBg:linear-gradient(90deg,rgba(255,255,255,.07),rgba(255,255,255,.03)); --bankTag:#c4c5ca; --lecTag:#a9aab0; --r:18px;
+    --cA:#ececee; --c1:#d4d4d8; --c2:#bdbdc2; --c4:#a6a7ad; --c5:#c7c7cc; --c6:#b0b1b6; --c7:#9d9ea4;
   }
   body[data-theme="boy"] {
     --bg:#060a13; --panel:#0c1322; --panel2:#101a2e; --line:#1d2a45; --text:#e6edf7; --muted:#7f8daa;
@@ -285,15 +285,20 @@
     <div class="panel2 p-4"><div class="label">Average</div><div class="font-mono text-3xl font-bold" id="stAvg">–</div><div class="text-xs muted">mean percentage</div></div>
     <div class="panel2 p-4"><div class="label">Pass rate</div><div class="font-mono text-3xl font-bold" id="stPass">–</div><div class="text-xs muted">scored ≥ 50%</div></div>
   </div>
+  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="panel2 p-4"><div class="label">👦 Boys</div><div class="font-mono text-3xl font-bold" style="color:#60a5fa" id="stBoys">0</div><div class="text-xs muted" id="stBoysA">0 attempts</div></div>
+    <div class="panel2 p-4"><div class="label">👧 Girls</div><div class="font-mono text-3xl font-bold" style="color:#f0a6c5" id="stGirls">0</div><div class="text-xs muted" id="stGirlsA">0 attempts</div></div>
+    <div class="panel2 p-4"><div class="label">⚗️ Not specified</div><div class="font-mono text-3xl font-bold" id="stNone">0</div><div class="text-xs muted" id="stNoneA">0 attempts</div></div>
+  </div>
   <div class="panel overflow-hidden">
     <div class="p-4 border-b flex flex-wrap gap-3 items-center justify-between" style="border-color:var(--line)">
-      <input id="adminSearch" placeholder="Search by name or ID…" class="px-3 py-2 text-sm w-full sm:w-72">
+      <input id="adminSearch" placeholder="Search by student ID…" class="px-3 py-2 text-sm w-full sm:w-72">
       <div class="flex items-center gap-2 text-xs muted"><span class="w-2 h-2 rounded-full animate-pulse" style="background:var(--acc)"></span> Live updates</div>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="text-left label"><tr>
-          <th class="px-4 py-3">#</th><th class="px-4 py-3">Student</th><th class="px-4 py-3">Date &amp; time</th>
+          <th class="px-4 py-3">#</th><th class="px-4 py-3">Student ID</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Date &amp; time</th>
           <th class="px-4 py-3">Lecture</th><th class="px-4 py-3">Difficulty</th><th class="px-4 py-3 text-right">Score</th><th class="px-4 py-3 text-right">%</th>
         </tr></thead>
         <tbody id="adminRows"></tbody>
@@ -806,7 +811,7 @@ function finishExam() {
   $('retryWrongBtn').textContent = `↻ Retry the ${wrong.length} I got wrong`;
   showView('result');
   if (pct === 100) confetti(fullBank ? 90 : 45);
-  if (!exam.isRetry) saveResult({ studentName: (n ? `${n} · ${SID}` : SID).slice(0, 60), scope: setup.scope, scopeLabel: s.label,
+  if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.scope, scopeLabel: s.label,
     difficulty: setup.diff, score: exam.score, total, percentage: pct, durationSec: dur });
 }
 $('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
@@ -868,17 +873,26 @@ function openAdmin() {
     load(); const on = e => { if (e.key === LOCAL_KEY) load(); }; window.addEventListener('storage', on); adminUnsub = () => window.removeEventListener('storage', on);
   }
 }
+// names are never shown: older records that stored "Name · Student-XXXX" are reduced to the ID
+const idOf = (r) => { const s = String(r.studentName || ''); const m = s.match(/Student-[A-Z0-9]{4}/); return m ? m[0] : 'Unknown'; };
+const genOf = (r) => r.gender === 'boy' || r.gender === 'girl' ? r.gender : 'none';
+const GEN_LABEL = { boy: '👦 Boy', girl: '👧 Girl', none: '<span class="muted">—</span>' };
 function renderAdmin() {
   const term = $('adminSearch').value.trim().toLowerCase();
-  const rows = adminRows.filter(r => !term || String(r.studentName).toLowerCase().includes(term));
-  const ids = new Set(adminRows.map(r => { const s = String(r.studentName); const m = s.match(/Student-[A-Z0-9]{4}/); return m ? m[0] : s.toLowerCase(); }));
-  $('stTakers').textContent = ids.size; $('stAttempts').textContent = adminRows.length;
+  const rows = adminRows.filter(r => !term || idOf(r).toLowerCase().includes(term));
+  // unique students by ID; a student's gender = the one on their latest attempt (rows are newest first)
+  const latest = new Map(); adminRows.forEach(r => { if (!latest.has(idOf(r))) latest.set(idOf(r), genOf(r)); });
+  const cnt = { boy: 0, girl: 0, none: 0 }, att = { boy: 0, girl: 0, none: 0 };
+  latest.forEach(g => cnt[g]++); adminRows.forEach(r => att[genOf(r)]++);
+  $('stBoys').textContent = cnt.boy; $('stGirls').textContent = cnt.girl; $('stNone').textContent = cnt.none;
+  $('stBoysA').textContent = att.boy + ' attempts'; $('stGirlsA').textContent = att.girl + ' attempts'; $('stNoneA').textContent = att.none + ' attempts';
+  $('stTakers').textContent = latest.size; $('stAttempts').textContent = adminRows.length;
   $('stAvg').textContent = adminRows.length ? (adminRows.reduce((a, r) => a + (+r.percentage || 0), 0) / adminRows.length).toFixed(1) + '%' : '–';
   $('stPass').textContent = adminRows.length ? Math.round(adminRows.filter(r => r.percentage >= 50).length / adminRows.length * 100) + '%' : '–';
   $('adminEmpty').classList.toggle('hidden', rows.length > 0);
   $('adminRows').innerHTML = rows.map((r, i) => { const p = +r.percentage || 0;
     return `<tr class="border-t">
-      <td class="px-4 py-3 muted font-mono">${i + 1}</td><td class="px-4 py-3 font-semibold">${esc(r.studentName)}</td>
+      <td class="px-4 py-3 muted font-mono">${i + 1}</td><td class="px-4 py-3 font-semibold font-mono">${esc(idOf(r))}</td><td class="px-4 py-3">${GEN_LABEL[genOf(r)]}</td>
       <td class="px-4 py-3 muted whitespace-nowrap">${esc(r.ts.toLocaleString())}</td><td class="px-4 py-3">${esc(r.scopeLabel || r.scope)}</td>
       <td class="px-4 py-3">${esc(diffLabel(r.difficulty))}</td><td class="px-4 py-3 text-right font-mono">${esc(r.score)}/${esc(r.total)}</td>
       <td class="px-4 py-3 text-right font-mono" style="color:${p >= 75 ? 'var(--acc)' : p >= 50 ? 'var(--amber)' : 'var(--rose)'}">${p}%</td></tr>`; }).join('');
@@ -886,8 +900,8 @@ function renderAdmin() {
 $('adminSearch').addEventListener('input', renderAdmin);
 $('exportCsv').onclick = () => {
   const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
-  const lines = [['Student','Date','Lecture','Difficulty','Score','Total','Percentage','Duration (s)'].map(cell).join(',')]
-    .concat(adminRows.map(r => [r.studentName, r.ts.toISOString(), r.scopeLabel || r.scope, diffLabel(r.difficulty), r.score, r.total, r.percentage, r.durationSec].map(cell).join(',')));
+  const lines = [['Student ID','Gender','Date','Lecture','Difficulty','Score','Total','Percentage','Duration (s)'].map(cell).join(',')]
+    .concat(adminRows.map(r => [idOf(r), genOf(r), r.ts.toISOString(), r.scopeLabel || r.scope, diffLabel(r.difficulty), r.score, r.total, r.percentage, r.durationSec].map(cell).join(',')));
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = `inorganic_results_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
