@@ -146,7 +146,7 @@
   <div class="panel p-5 sm:p-7 grid gap-7">
     <!-- name -->
     <div>
-      <label for="studentName" class="label block mb-2">01 · Your name <span style="color:var(--acc)">(optional)</span></label>
+      <label for="studentName" class="label block mb-2">Your name <span style="color:var(--acc)">(optional)</span></label>
       <input id="studentName" type="text" maxlength="30" autocomplete="given-name" placeholder="Name" class="w-full sm:max-w-sm px-4 py-3 text-lg">
       <p id="nameHint" class="ar text-sm mt-2 muted text-right sm:text-right">✍️ اختياري — لو كتبت اسمك هنناديك بيه في رسايل الترحيب والفيدباك بعد كل سؤال وفي النتيجة النهائية.</p>
     </div>
@@ -162,15 +162,34 @@
       <p class="ar text-sm mt-2 muted text-right sm:text-right">🎨 اختياري — لو اخترت، شكل الموقع وألوانه وطريقة الكلام والتحفيز هيتغيّروا ليك في نفس اللحظة. لو مخترتش، هيفضل الشكل الأساسي.</p>
     </div>
 
-    <!-- scope -->
+    <!-- mode -->
     <div>
-      <div class="label mb-3">02 · Choose the lecture</div>
+      <div class="label mb-3">Mode</div>
+      <div class="grid sm:grid-cols-3 gap-3" id="modeChoices">
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-mode="custom">
+          <div class="font-semibold">🧪 Custom practice</div>
+          <div class="nm mt-1">Choose the lecture, number of questions and difficulty</div>
+        </button>
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-mode="essay">
+          <div class="font-semibold">✍️ Short-answer only</div>
+          <div class="nm mt-1">Only the bank's short-answer (essay) questions</div>
+        </button>
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-mode="sim">
+          <div class="font-semibold">🎓 Exam simulation</div>
+          <div class="nm mt-1">32 random MCQs + 2 random short-answer, all from the bank</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- scope -->
+    <div id="secScope">
+      <div class="label mb-3">Choose the lecture</div>
       <div id="scopeTiles" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
     </div>
 
     <!-- source -->
-    <div>
-      <div class="label mb-3">03 · Question source</div>
+    <div id="secSource">
+      <div class="label mb-3">Question source</div>
       <div class="grid sm:grid-cols-2 gap-3" id="sourceChoices">
         <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-source="mix">
           <div class="font-semibold">📘 + 🧪 Bank + lecture questions</div>
@@ -185,8 +204,8 @@
     </div>
 
     <!-- count -->
-    <div>
-      <div class="label mb-3">04 · Number of questions</div>
+    <div id="secCount">
+      <div class="label mb-3">Number of questions</div>
       <div class="flex flex-wrap gap-2 items-center" id="countChips"></div>
       <div class="flex items-center gap-3 mt-3">
         <input id="customCount" type="number" inputmode="numeric" min="1" step="1" placeholder="Type a number" class="w-40 px-3 py-2">
@@ -196,8 +215,8 @@
     </div>
 
     <!-- difficulty -->
-    <div>
-      <div class="label mb-3">05 · Difficulty</div>
+    <div id="secDiff">
+      <div class="label mb-3">Difficulty</div>
       <div class="flex flex-wrap gap-2" id="diffChips"></div>
       <p class="text-xs muted mt-2">If a level runs short for the chosen lecture, the exam is topped up from the nearest level.</p>
     </div>
@@ -558,8 +577,10 @@ const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) {
 const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
 const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
 const scopeOf = (k) => SCOPES.find(s => s.key === k) || SCOPES[0];
-const diffLabel = (k) => (DIFFS.find(d => d.key === k) || {}).label || k;
-const poolFor = (scope) => QUESTIONS.filter(q => (scope === 'ALL' || q.scope === scope) && (setup.source !== 'bank' || q.src === 'bank'));
+const diffLabel = (k) => k === 'mixed' ? 'Mixed' : ((DIFFS.find(d => d.key === k) || {}).label || k);
+const SIM_MCQ = 32, SIM_ESSAY = 2;
+const poolFor = (scope) => QUESTIONS.filter(q => (scope === 'ALL' || q.scope === scope) && (
+  setup.mode === 'essay' ? (q.type === 'essay' && q.src === 'bank') : (setup.source !== 'bank' || q.src === 'bank')));
 function showView(name) {
   ['setup','exam','result','admin'].forEach(v => $('view-' + v).classList.toggle('hidden-view', v !== name));
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -597,8 +618,10 @@ function studentId() {
 const SID = studentId();
 
 /* =================== SETUP =================== */
-const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium', source: 'mix' };
+const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium', source: 'mix', mode: 'custom' };
 try { setup.source = localStorage.getItem('inorg_source') === 'bank' ? 'bank' : 'mix'; } catch {}
+try { const m = localStorage.getItem('inorg_mode'); if (m === 'essay' || m === 'sim') setup.mode = m; } catch {}
+if (setup.mode === 'essay') setup.count = 5;
 try { setup.gender = localStorage.getItem('inorg_gender') || ''; } catch {}
 try { setup.name = localStorage.getItem('inorg_name') || ''; } catch {}
 $('studentName').value = setup.name;
@@ -624,6 +647,13 @@ function renderSetup() {
   }).join('');
   const s = scopeOf(setup.scope);
   document.querySelectorAll('#sourceChoices [data-source]').forEach(b => b.classList.toggle('on', b.dataset.source === setup.source));
+  document.querySelectorAll('#modeChoices [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === setup.mode));
+  $('secScope').classList.toggle('hidden', setup.mode === 'sim');
+  $('secCount').classList.toggle('hidden', setup.mode === 'sim');
+  $('secSource').classList.toggle('hidden', setup.mode !== 'custom');
+  $('secDiff').classList.toggle('hidden', setup.mode !== 'custom');
+  if (setup.mode === 'sim') { $('summary').innerHTML = `🎓 Exam simulation · <span class="font-mono">${SIM_MCQ}</span> MCQs + <span class="font-mono">${SIM_ESSAY}</span> short-answer · random from the whole bank`; return; }
+  if (setup.mode === 'essay') { $('summary').innerHTML = `✍️ Short-answer only · <span class="font-mono">${setup.count}</span> questions · ${s.label}`; return; }
   $('summary').innerHTML = `${setup.source === 'bank' ? '📘 Bank only · ' : ''}<span class="font-mono">${setup.count}</span> questions · ${s.label}${s.key !== 'ALL' ? ' — ' + s.sub : ''} · ${setup.count >= max ? 'all levels' : diffLabel(setup.diff)}`;
 }
 $('studentName').addEventListener('input', () => {
@@ -656,6 +686,11 @@ function applyTheme() {
 document.addEventListener('click', (e) => {
   const gb = e.target.closest('[data-gender]');
   if (gb) { setup.gender = gb.dataset.gender; try { localStorage.setItem('inorg_gender', setup.gender); } catch {} applyTheme(); renderSetup(); return; }
+  const md = e.target.closest('[data-mode]');
+  if (md) { setup.mode = md.dataset.mode; try { localStorage.setItem('inorg_mode', setup.mode); } catch {}
+    if (!poolFor(setup.scope).length) setup.scope = 'ALL';
+    const mx = poolFor(setup.scope).length; setup.count = Math.min(setup.mode === 'essay' ? mx : 10, mx);
+    $('customCount').value = ''; $('countErr').classList.add('hidden'); renderSetup(); return; }
   const src = e.target.closest('[data-source]');
   if (src) { setup.source = src.dataset.source; try { localStorage.setItem('inorg_source', setup.source); } catch {}
     if (!poolFor(setup.scope).length) { setup.scope = 'ALL'; setup.count = 10; }
@@ -690,7 +725,17 @@ function prepareQs(list) {
     return { ...q, opts: idx.map(i => q.o[i]), ans: idx.indexOf(q.a) };
   });
 }
+function buildSimulation() {
+  // 32 random bank MCQs (no near-duplicates) + 2 random bank short-answer questions at the end, like the real exam
+  const seen = new Set(), mcq = [];
+  for (const q of shuffle(QUESTIONS.filter(q => q.src === 'bank' && q.type === 'mcq'))) {
+    if (mcq.length >= SIM_MCQ) break; if (q.g && seen.has(q.g)) continue; if (q.g) seen.add(q.g); mcq.push(q);
+  }
+  const essays = shuffle(QUESTIONS.filter(q => q.src === 'bank' && q.type === 'essay')).slice(0, SIM_ESSAY);
+  return [...prepareQs(mcq), ...prepareQs(essays)];
+}
 function buildExam(scope, count, diff) {
+  if (setup.mode === 'sim') return buildSimulation();
   const pool = poolFor(scope);
   if (count >= pool.length) return prepareQs(pool);           // whole bank / whole lecture
   const order = { easy: ['easy','medium','hard'], medium: ['medium','easy','hard'], hard: ['hard','medium','easy'] }[diff];
@@ -813,7 +858,7 @@ function finishExam() {
   clearInterval(timerInt);
   const total = exam.qs.length, pct = Math.round((exam.score / total) * 1000) / 10;
   const dur = Math.floor((Date.now() - exam.start) / 1000), n = setup.name, s = scopeOf(setup.scope);
-  const fullBank = !exam.isRetry && setup.scope === 'ALL' && total === poolFor('ALL').length && exam.score === total;
+  const fullBank = !exam.isRetry && setup.mode === 'custom' && setup.scope === 'ALL' && total === poolFor('ALL').length && exam.score === total;
   let msg;
   if (fullBank) msg = `ما شاء الله، تبارك الرحمن ${G('عليك', 'عليكي')} ${G('جبت', 'جبتي')} البنك في شوال 👏`;
   else if (pct === 100) msg = `فُل مارك${YA(n)}! ما شاء الله تبارك الله ${G('🎉', '💖')}`;
@@ -827,8 +872,9 @@ function finishExam() {
   $('resPct').style.color = pct >= 75 ? 'var(--acc)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
   $('resScore').textContent = `${exam.score} / ${total} correct`;
   $('resMsg').textContent = msg;
-  $('resScope').textContent = s.label + (s.key !== 'ALL' ? ' · ' + s.sub : '');
-  $('resDiff').textContent = total >= poolFor(setup.scope).length && !exam.isRetry ? 'All levels' : diffLabel(setup.diff);
+  const modeLabel = setup.mode === 'sim' ? `Exam simulation (${SIM_MCQ} MCQ + ${SIM_ESSAY} short-answer)` : setup.mode === 'essay' ? s.label + ' (short-answer only)' : s.label + (setup.source === 'bank' ? ' (bank only)' : '');
+  $('resScope').textContent = setup.mode === 'sim' ? 'Exam simulation' : setup.mode === 'essay' ? s.label + ' · short-answer only' : s.label + (s.key !== 'ALL' ? ' · ' + s.sub : '');
+  $('resDiff').textContent = setup.mode !== 'custom' ? 'Mixed' : (total >= poolFor(setup.scope).length && !exam.isRetry ? 'All levels' : diffLabel(setup.diff));
   $('resTime').textContent = fmtTime(dur);
   $('resStreak').textContent = exam.best + ' 🔥';
   $('reviewList').classList.add('hidden'); $('reviewToggle').textContent = 'Review answers';
@@ -846,8 +892,8 @@ function finishExam() {
   $('retryWrongBtn').textContent = `↻ Retry the ${wrong.length} I got wrong`;
   showView('result');
   if (pct === 100) confetti(fullBank ? 90 : 45);
-  if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.scope, scopeLabel: s.label + (setup.source === 'bank' ? ' (bank only)' : ''),
-    difficulty: setup.diff, score: exam.score, total, percentage: pct, durationSec: dur });
+  if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.mode === 'sim' ? 'SIM' : setup.scope, scopeLabel: modeLabel,
+    difficulty: setup.mode === 'custom' ? setup.diff : 'mixed', score: exam.score, total, percentage: pct, durationSec: dur });
 }
 $('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
 $('reviewToggle').onclick = () => { const h = $('reviewList').classList.toggle('hidden'); $('reviewToggle').textContent = h ? 'Review answers' : 'Hide review'; };
